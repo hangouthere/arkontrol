@@ -1,0 +1,10 @@
+@import 'fonts';
+@import 'global';
+
+.madeWith {
+  display: flex;
+  justify-content: space-around;
+  background: #686766;
+  padding: 15px 0;
+  margin-bottom: 10px;
+}
