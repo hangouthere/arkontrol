@@ -1,0 +1,16 @@
+{
+  "auth": {
+    "host": "localhost",
+    "port": 27015,
+    "password": "adminPassword"
+  },
+  "commands": {
+    "adminUserName": "Admin",
+    "maxConnectionAttempts": 5,
+    "maxPacketTimeouts": 5
+  },
+  "discord": {
+    "discordAdminName": "Your Server Admin",
+    "discordWebhookURL": ""
+  }
+}

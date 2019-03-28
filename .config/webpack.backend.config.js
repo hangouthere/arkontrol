@@ -4,10 +4,16 @@ const nodeExternals = require('webpack-node-externals');
 const Util = require('./util');
 const {
   BuildTimeDefs: {
+    isProd,
     Outputs: { RootDir, DistDir, Backend: OutputInfo }
   },
-  BaseConfigs: { CommonConfig },
-  Webpack
+  BaseConfigs: {
+    CommonConfig,
+    DevConfigMod: { backend: DevConfigMod }
+  },
+  Webpack: {
+    WatchOptions: { backend: WatchOptions }
+  }
 } = require('./definitions');
 
 const config = merge(
@@ -24,7 +30,9 @@ const config = merge(
     externals: [nodeExternals()]
   },
   // Watch Mod for Backend
-  Webpack.WatchOptions.backend
+  WatchOptions,
+  // Add Dev/Prod config modifiers
+  !isProd ? DevConfigMod : {}
 );
 
 Util.checkConfigOnly(config);

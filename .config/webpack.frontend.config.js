@@ -7,14 +7,17 @@ const {
     Outputs: { RootDir, DistDir, Frontend: OutputInfo }
   },
   Plugins,
-  BaseConfigs,
-  Webpack
+  BaseConfigs: {
+    CommonConfig,
+    DevConfigMod: { frontend: DevConfigMod }
+  },
+  Webpack: { DevServer }
 } = require('./definitions');
 
 Util.checkDLLMissing();
 
 const config = merge.smart(
-  BaseConfigs.CommonConfig,
+  CommonConfig,
   // Build-specific configuration
   {
     entry: ['./src/frontend/index.tsx'],
@@ -25,9 +28,9 @@ const config = merge.smart(
     plugins: [Plugins.WebPackHTML]
   },
   // Add Dev Server config
-  Webpack.DevServer,
+  DevServer,
   // Add Dev/Prod config modifiers
-  !isProd ? BaseConfigs.DevConfigMod.frontend : {}
+  !isProd ? DevConfigMod : {}
 );
 
 Util.checkConfigOnly(config);

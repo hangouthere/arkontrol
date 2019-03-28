@@ -1,3 +1,7 @@
 .idea
 node_modules
 _dist
+_build
+
+# Secret Secure Data
+**/rconConfig/config.json

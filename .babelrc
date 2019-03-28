@@ -6,7 +6,7 @@
         "useBuiltIns": "entry",
         "corejs": 3,
         "targets": {
-          "browsers": "current",
+          "chrome": "70",
           "node": "current"
         }
       }

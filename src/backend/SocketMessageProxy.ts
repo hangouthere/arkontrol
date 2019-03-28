@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import WebSocketServer from './WebSocketServer';
+import WebSocketServer from './servers/WebSocketServer';
 
 export default class SocketMessageProxy {
   private _webSocketServer: WebSocketServer;

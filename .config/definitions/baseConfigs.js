@@ -49,6 +49,13 @@ const DevConfigMod = {
       rules: [Rules.SourceMaps]
     },
     plugins: [Plugins.DLLReference, Plugins.HTMLIncludeAssets]
+  },
+  backend: {
+    // Add SourceMaps
+    devtool: 'inline-source-map',
+    module: {
+      rules: [Rules.SourceMaps]
+    }
   }
 };
 

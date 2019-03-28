@@ -1,0 +1,8 @@
+{
+  "list": [
+    "broadcast <RichColor Color=\"0, 1, 0, 1\">Congratulations!</> ArKontrol is operational!",
+    "wait 10",
+    "broadcast <RichColor Color=\"0.95, 0.45, 0.2, 1\">Now go forth</>, and configure your \"commands.json\" to build a set of commands to run when you want!",
+    "wait 30"
+  ]
+}
