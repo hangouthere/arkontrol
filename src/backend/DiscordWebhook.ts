@@ -1,4 +1,4 @@
-import ConfigParser from './ConfigParser';
+import ConfigParser from './util/ConfigParser';
 import fetch from 'node-fetch';
 
 const COLOR_DOWN = 16711680;

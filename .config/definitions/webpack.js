@@ -11,8 +11,6 @@ const Resolver = {
   extensions: ['.js', '.ts', '.tsx', '.jsx', '.json']
 };
 
-//TODO: Is this still necessary?
-// Thinking NO, but need to test with webpack-dev-server
 const WatchOptions = {
   backend: {
     watchOptions: {
@@ -26,9 +24,13 @@ const DevServer = {
     contentBase: path.join(DistDir, OutputInfo.Path),
     hot: true,
     historyApiFallback: true,
+    host: '0.0.0.0',
     port: WDSPort,
     watchOptions: {
       ignored: /backend/
+    },
+    proxy: {
+      '/api': 'http://localhost:3000'
     }
   }
 };

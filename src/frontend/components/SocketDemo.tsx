@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { InputGroup, Button, TextArea } from '@blueprintjs/core';
 
 // Declared here, but injected via WebPack.DefinePlugin
 declare var SOCKET_URI: string;
@@ -10,7 +11,7 @@ interface IState {
 
 // TODO: Turn URL into a process var
 
-class SocketUI extends React.PureComponent<{}, IState> {
+class SocketDemo extends React.PureComponent<{}, IState> {
   _ws!: WebSocket;
 
   state = {
@@ -56,14 +57,21 @@ class SocketUI extends React.PureComponent<{}, IState> {
   render() {
     return (
       <React.Fragment>
-        <div>
-          <input type="text" value={this.state.inputMessage} onChange={this._updateText} />
-          <button onClick={this._submit}>Send</button>
-        </div>
-        <textarea readOnly={true} value={this.state.lastMessage} rows={20} cols={50} />
+        <section className="messageInput">
+          <InputGroup
+            className="longerTextGroup"
+            value={this.state.inputMessage}
+            onChange={this._updateText}
+            placeholder="Enter Message"
+            leftIcon="comment"
+          />
+          <Button text="Send" intent="success" onClick={this._submit} />
+        </section>
+
+        <TextArea className="socketLog" readOnly={true} value={this.state.lastMessage} rows={10} cols={66} />
       </React.Fragment>
     );
   }
 }
 
-export default SocketUI;
+export default SocketDemo;

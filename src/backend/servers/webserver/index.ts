@@ -1,9 +1,11 @@
 import * as path from 'path';
 import http from 'http';
 import koa from 'koa';
+import koaCors from '@koa/cors';
 import koaStatic from 'koa-static';
-import RootPath from '../RootPath';
-import LoggerConfig from '../LoggerConfig';
+import RootPath from '../../RootPath';
+import LoggerConfig from '../../util/LoggerConfig';
+import Routes from './Routes';
 
 const Logger = LoggerConfig.instance.getLogger('server');
 
@@ -25,15 +27,21 @@ export default class KoaServer {
   }
 
   constructor(options: IKoaServerInitOptions) {
-    const fullPath = path.resolve(RootPath, options.publicPath);
+    const staticPath = path.resolve(RootPath, options.publicPath);
+    const routes = new Routes();
+
+    routes.init();
 
     this._instance = new koa();
     this._httpServer = http.createServer(this._instance.callback());
-    this._instance.use(koaStatic(fullPath));
+    this._instance.use(koaCors());
+    this._instance.use(koaStatic(staticPath));
+
+    routes.bindRouter(this._instance);
 
     this._httpServer.listen(options.port);
 
     Logger.info(`Server Listening on http://localhost:${options.port}`);
-    Logger.info(`Serving Static files from ${fullPath}`);
+    Logger.info(`Serving Static files from ${staticPath}`);
   }
 }

@@ -1,5 +1,5 @@
-import ConfigParser from '../ConfigParser';
-import LoggerConfig from '../LoggerConfig';
+import ConfigParser from '../util/ConfigParser';
+import LoggerConfig from '../util/LoggerConfig';
 import RCONClient from './RCONClient';
 
 const Logger = LoggerConfig.instance.getLogger('commands');

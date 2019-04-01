@@ -1,10 +1,16 @@
+@import '~normalize.css';
+@import '~@blueprintjs/core/src/blueprint.scss';
+@import '~@blueprintjs/table/src/table.scss';
+@import '~@blueprintjs/icons/lib/css/blueprint-icons.css';
+
 @import 'fonts';
 @import 'global';
 
-.madeWith {
-  display: flex;
-  justify-content: space-around;
-  background: #686766;
-  padding: 15px 0;
+.messageInput {
   margin-bottom: 10px;
+}
+
+.socketLog {
+  font-family: 'VT323';
+  font-size: 150%;
 }

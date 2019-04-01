@@ -1,7 +1,8 @@
 import 'source-map-support/register';
 
-import ConfigParser from './ConfigParser';
-import KoaServer from './servers/KoaServer';
+import Database from './util/database';
+import ConfigParser from './util/ConfigParser';
+import KoaServer from './servers/webserver';
 import RCONClient from './rcon/RCONClient';
 import RCONCommandList from './rcon/RCONCommandList';
 import RCONStatus from './rcon/RCONStatus';
@@ -26,6 +27,7 @@ class BackendApp {
   }
 
   async init() {
+    await Database.init();
     await ConfigParser.init();
 
     this.initWebServer();

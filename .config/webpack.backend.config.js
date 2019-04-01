@@ -11,6 +11,7 @@ const {
     CommonConfig,
     DevConfigMod: { backend: DevConfigMod }
   },
+  Plugins: { CopyDBMigrations },
   Webpack: {
     WatchOptions: { backend: WatchOptions }
   }
@@ -27,7 +28,8 @@ const config = merge(
       path: path.join(RootDir, DistDir, OutputInfo.Path),
       filename: `index.js`
     },
-    externals: [nodeExternals()]
+    externals: [nodeExternals()],
+    plugins: [CopyDBMigrations]
   },
   // Watch Mod for Backend
   WatchOptions,

@@ -4,6 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const HtmlWebpackIncludeAssetsPlugin = require('html-webpack-include-assets-plugin');
 const MiniCSSExtractPlugin = require('mini-css-extract-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 
 const {
   isHot,
@@ -13,8 +14,19 @@ const {
   PackageInfo,
   ServerPort,
   WDSPort,
-  Outputs: { DistDir, Frontend: OutputInfo }
+  Outputs: { RootDir, Frontend: FrontendOutputInfo, Backend: BackendOutputInfo }
 } = require('./buildTime');
+
+/**
+ * Copy DB Migrations to dist output for runtime startup
+ */
+const CopyDBMigrations = new CopyPlugin([
+  // Copy Migrations
+  {
+    from: path.resolve(RootDir, 'src', BackendOutputInfo.MainName, 'util', 'database', 'migrations'),
+    to: path.join('database', 'migrations')
+  }
+]);
 
 /**
  * Define constants via `DefinePlugin`.
@@ -24,7 +36,7 @@ const DefineConstants = new webpack.DefinePlugin({
   'process.env': {
     INIT_URI: JSON.stringify(
       // Build URI to init the UI from
-      isHot ? `http://localhost:${WDSPort}` : `file://${path.resolve(OutputInfo.Path, 'index.html')}`
+      isHot ? `http://localhost:${WDSPort}` : `file://${path.resolve(FrontendOutputInfo.Path, 'index.html')}`
     ),
     HOT: JSON.stringify(isHot),
     SERVER_PORT: JSON.stringify(ServerPort),
@@ -38,7 +50,7 @@ const DefineConstants = new webpack.DefinePlugin({
  * If Prod is detected, it will minify the HTML.
  */
 const WebPackHTML = new HtmlWebpackPlugin({
-  title: PackageInfo.name,
+  title: 'ArKontrol',
   template: HtmlTemplatePath,
   hash: true,
   filename: 'index.html',
@@ -53,7 +65,7 @@ const WebPackHTML = new HtmlWebpackPlugin({
  * HTML Plugin Modifier to add DLL as script tag.
  */
 const HTMLIncludeAssets = new HtmlWebpackIncludeAssetsPlugin({
-  assets: [path.posix.join(OutputInfo.Scripts, `${OutputInfo.MainName}_dll.js`)],
+  assets: [path.posix.join(FrontendOutputInfo.Scripts, `${FrontendOutputInfo.MainName}_dll.js`)],
   append: false,
   hash: true
 });
@@ -62,7 +74,7 @@ const HTMLIncludeAssets = new HtmlWebpackIncludeAssetsPlugin({
  * DLL Plugin to include F/E dependencies
  */
 const DLL = new webpack.DllPlugin({
-  name: `${OutputInfo.MainName}_dll`,
+  name: `${FrontendOutputInfo.MainName}_dll`,
   path: DLLManifestPath
 });
 
@@ -71,7 +83,7 @@ const DLL = new webpack.DllPlugin({
  * not compiled in dev build
  */
 const DLLReference = new webpack.DllReferencePlugin({
-  context: OutputInfo.Scripts,
+  context: FrontendOutputInfo.Scripts,
   manifest: DLLManifestPath
 });
 
@@ -84,7 +96,7 @@ const cssNames = {
   chunk: isProd ? '[id].[hash].css' : '[id].css'
 };
 const ExtractCSS = new MiniCSSExtractPlugin({
-  filename: path.posix.join(OutputInfo.Styles, cssNames.file)
+  filename: path.posix.join(FrontendOutputInfo.Styles, cssNames.file)
 });
 
 /**
@@ -95,6 +107,7 @@ const TSTypeChecker = new ForkTsCheckerWebpackPlugin({
 });
 
 module.exports = {
+  CopyDBMigrations,
   DefineConstants,
   DLL,
   DLLReference,

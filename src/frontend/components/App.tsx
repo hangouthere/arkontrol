@@ -1,19 +1,18 @@
-import { hot } from 'react-hot-loader/root';
 import * as React from 'react';
-import Counter from './Counter';
-import SocketUI from './SocketUI';
+import { hot } from 'react-hot-loader/root';
+import { BrowserRouter as Router, Route } from 'react-router-dom';
+import Layout from './Layout';
+import SocketDemo from './SocketDemo';
+import PlayerListContainer from '../containers/PlayerListContainer';
 
 const App: React.FC = () => {
   return (
-    <div>
-      <div className="madeWith">
-        <img src={require('../assets/images/logos/webpack.png')} />
-        <img src={require('../assets/images/logos/react.png')} />
-      </div>
-
-      <Counter />
-      <SocketUI />
-    </div>
+    <Router>
+      <Layout>
+        <Route exact={true} path="/" component={PlayerListContainer} />
+        <Route path="/socketDemo" component={SocketDemo} />
+      </Layout>
+    </Router>
   );
 };
 

@@ -1,9 +1,9 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { Rcon } from 'rcon-client';
-import ConfigParser, { IConfig } from '../ConfigParser';
+import ConfigParser, { IConfig } from '../util/ConfigParser';
 import DiscordWebhook from '../DiscordWebhook';
-import LoggerConfig, { LOG_PATH } from '../LoggerConfig';
+import LoggerConfig, { LOG_PATH } from '../util/LoggerConfig';
 
 const serverSemaphore = 'serverWasDown';
 const STATUS_SEMAPHORE_FILE = path.join(LOG_PATH, serverSemaphore);
@@ -43,29 +43,32 @@ export default class RCONClient {
     this.connect();
   }
 
-  async connect() {
-    // rcon-client throws an uncaught exception for some reason... Catch here and handle it!
-    process.once('uncaughtException', async err => {
-      if (err.message.includes('connect ETIMEDOUT') || err.message.includes('read ECONNRESET')) {
-        if (this._connectionAttempts >= this._cfgCommands.maxConnectionAttempts) {
-          this._markServerStatus(false);
-          return;
-        }
-
-        Logger.server.error(
-          'RCON Could not connect to specified host/port combination.\n' +
-            'Please make sure:\n' +
-            '\t1) The server is up\n' +
-            '\t2) You have RCON enabled on the server\n' +
-            '\t3) The configuration is set correctly.'
-        );
-
-        return this.connect();
+  _detectDisconnection = async (err: Error) => {
+    if (err.message.includes('connect ETIMEDOUT') || err.message.includes('read ECONNRESET')) {
+      if (this._connectionAttempts >= this._cfgCommands.maxConnectionAttempts) {
+        this._markServerStatus(false);
+        return;
       }
 
-      // TODO: Consider catchall here? Somewhere else? Crash?
-      return;
-    });
+      Logger.server.error(
+        'RCON Could not connect to specified host/port combination.\n' +
+          'Please make sure:\n' +
+          '\t1) The server is up\n' +
+          '\t2) You have RCON enabled on the server\n' +
+          '\t3) The configuration is set correctly.'
+      );
+
+      return this.connect();
+    }
+
+    // TODO: Consider catchall here? Somewhere else? Crash?
+    return;
+  }
+
+  async connect() {
+    // rcon-client throws an uncaught exception for some reason... Catch here and handle it!
+    process.off('uncaughtException', this._detectDisconnection);
+    process.once('uncaughtException', this._detectDisconnection);
 
     try {
       this._connectionAttempts++;
@@ -92,12 +95,12 @@ export default class RCONClient {
       });
     } catch (err) {
       if ('Authentication failed: wrong password' === err.message) {
-        Logger.server.error('RCON Supplied Password is invalid, please check your configuration!');
+        Logger.server.error('Supplied RCON Password is invalid, please check your configuration!');
 
         this._markServerStatus(false, true);
-      } else {
-        Logger.debug.warn('Timeout when performing: Auth?');
       }
+
+      this.markPossibleTimeout(err, 'Authentication');
     } finally {
       return this._instance;
     }
@@ -105,8 +108,12 @@ export default class RCONClient {
     return;
   }
 
-  markTimeout() {
-    this._timeouts++;
+  markPossibleTimeout(err: Error, type: string) {
+    if (true === err.message.includes('Response timeout for packet id')) {
+      this._timeouts++;
+
+      Logger.debug.warn(`Timeout when performing (${this._timeouts}/${this._cfgCommands.maxPacketTimeouts}): ${type}`);
+    }
 
     if (this._timeouts >= this._cfgCommands.maxPacketTimeouts) {
       Logger.server.warn(`Maximum timeouts reached (${this._cfgCommands.maxPacketTimeouts}), forcing a reconnect...`);
@@ -142,3 +149,7 @@ export default class RCONClient {
     this._serverWasDown = !isUp;
   }
 }
+
+process.on('unhandledRejection', (error: any) => {
+  console.log('------------------------------------ unhandledRejection', error);
+});

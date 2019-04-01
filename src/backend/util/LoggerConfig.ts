@@ -1,8 +1,8 @@
 import path from 'path';
 import log4js, { Log4js } from 'log4js';
-import RootPath from './RootPath';
+import RootPath from '../RootPath';
 
-// TODO: Convert these to process ENV vars
+// TODO: Convert these to Config vars
 const COMMON_LOG_SIZE: number = 3 * 1024 * 1024; // 3 * 1024 * 1024 = 3145728 = 3MB
 const COMMON_BACKUP_COUNT: number = 5;
 

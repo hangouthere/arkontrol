@@ -17,7 +17,7 @@ const PackageInfo = JSON.parse(require('fs').readFileSync(packageJSONPath));
 
 // Path configurations
 const distDir = '_dist';
-const backendPath = 'backend';
+const backendPath = backEndName;
 const frontendPath = 'public';
 const assetsDir = 'assets';
 const imagesDir = path.posix.join(assetsDir, 'images');
