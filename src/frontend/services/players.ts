@@ -1,6 +1,18 @@
-class PlayersService {
+import BaseService from './base';
+
+export interface IPlayer {
+  userName: string;
+  steamId: string;
+  isOnline: boolean;
+  lastSeen: string;
+}
+
+class PlayersService extends BaseService {
   async getPlayers() {
-    return fetch('http://localhost:8080/api/v1/players').then(r => r.json());
+    return this._baseUrl
+      .url('players')
+      .get()
+      .json(j => j.players);
   }
 }
 

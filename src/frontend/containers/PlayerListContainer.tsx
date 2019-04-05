@@ -1,32 +1,56 @@
+import { Button } from '@blueprintjs/core';
 import React from 'react';
-import PlayersService from '../services/players';
-import PlayerList, { Player } from '../components/PlayerList';
+import { connect } from 'react-redux';
+import { Dispatch } from 'redux';
+import PlayerList from '../components/PlayerList';
+import { PlayersActions } from '../store/actions/players';
+import { IRootState } from '../store/reducers';
+import { PlayersState } from '../store/reducers/players';
 
-interface State {
-  players?: Array<Player>;
+const REFRESH_INTERVAL = 60 * 1000;
+
+interface IProps {
+  listData: PlayersState;
+  loadPlayers: typeof PlayersActions.loadPlayers;
 }
 
-export default class PlayerListContainer extends React.PureComponent<{}, State> {
-  state: State = {
-    players: []
-  };
+class PlayerListContainer extends React.PureComponent<IProps> {
+  private _intervalId!: NodeJS.Timeout;
 
-  componentWillMount() {
+  componentDidMount() {
+    this._intervalId = setInterval(this._getPlayers, REFRESH_INTERVAL);
     this._getPlayers();
   }
 
-  async _getPlayers() {
-    const players = await PlayersService.getPlayers();
+  componentWillUnmount() {
+    clearInterval(this._intervalId);
+  }
 
-    this.setState({ players: players.users });
+  _getPlayers = async () => {
+    await this.props.loadPlayers();
   }
 
   render() {
     return (
-      <div className="playerLists">
-        <h1>Player List</h1>
-        <PlayerList players={this.state.players} />
+      <div id="PlayerListContainer">
+        <h1>
+          Player List <Button minimal={true} icon="refresh" onClick={this._getPlayers} />
+        </h1>
+        <PlayerList {...this.props.listData} />
       </div>
     );
   }
 }
+
+const mapStateToProps = (state: IRootState) => ({
+  listData: state.Players
+});
+
+const mapDispatchToProps = (dispatch: Dispatch) => ({
+  loadPlayers: () => dispatch(PlayersActions.loadPlayers())
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(PlayerListContainer);

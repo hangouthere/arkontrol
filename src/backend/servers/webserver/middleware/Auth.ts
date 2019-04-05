@@ -1,5 +1,13 @@
 import { Context } from 'koa';
 import { IMiddleware } from 'koa-router';
+import jwt from 'koa-jwt';
+
+export const JWT_SECRET = process.env.SECRET || 'secret';
+
+export const koaJwt = jwt({
+  secret: JWT_SECRET,
+  tokenKey: 'token'
+});
 
 export function hasRoles(roles: Array<string>): IMiddleware {
   return async (ctx: Context, next: () => Promise<any>) => {

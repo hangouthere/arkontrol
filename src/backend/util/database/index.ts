@@ -15,6 +15,16 @@ const USERS_DB = path.join(DATA_PATH, databaseName);
 
 const SALT = 'ArKontrolSecretSalt';
 
+export interface IAuthRequest {
+  userName: string;
+  password: string;
+}
+
+export interface IUser extends IAuthRequest {
+  role: string;
+  lastLogin: string;
+}
+
 class Database {
   _instance!: sqlite.Database;
 
@@ -36,17 +46,25 @@ class Database {
       .digest('hex');
   }
 
-  async validateUser(userName: string, passwd: string): Promise<boolean> {
+  async validateUser(authRequest: IAuthRequest): Promise<IUser | undefined> {
     try {
       const user = await this._instance.get(
         'SELECT * FROM Users WHERE userName = ? AND password = ?',
-        userName,
-        this._getSaltedHash(passwd)
+        authRequest.userName,
+        this._getSaltedHash(authRequest.password)
       );
 
-      return !!user;
+      if (user) {
+        const now = new Date().toISOString();
+
+        await this._instance.run('UPDATE Users SET lastLogin = ? WHERE userName = ?', user.userName, now);
+
+        user.lastLogin = now;
+      }
+
+      return user;
     } catch (err) {
-      return false;
+      return undefined;
     }
   }
 

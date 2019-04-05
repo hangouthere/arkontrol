@@ -18,8 +18,6 @@ export default class RCONStatus {
 
   constructor(client: RCONClient) {
     this._client = client;
-
-    this.init();
   }
 
   async init() {

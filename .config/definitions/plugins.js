@@ -11,7 +11,6 @@ const {
   isProd,
   DLLManifestPath,
   HtmlTemplatePath,
-  PackageInfo,
   ServerPort,
   WDSPort,
   Outputs: { RootDir, Frontend: FrontendOutputInfo, Backend: BackendOutputInfo }
@@ -54,6 +53,7 @@ const WebPackHTML = new HtmlWebpackPlugin({
   template: HtmlTemplatePath,
   hash: true,
   filename: 'index.html',
+  favicon: path.resolve(RootDir, 'src', FrontendOutputInfo.MainName, 'assets', 'favicon.ico'),
   minify: !isProd
     ? {}
     : {

@@ -109,8 +109,11 @@ export default class RCONClient {
   }
 
   markPossibleTimeout(err: Error, type: string) {
+    let wasTimeout = false;
+
     if (true === err.message.includes('Response timeout for packet id')) {
       this._timeouts++;
+      wasTimeout = true;
 
       Logger.debug.warn(`Timeout when performing (${this._timeouts}/${this._cfgCommands.maxPacketTimeouts}): ${type}`);
     }
@@ -119,6 +122,8 @@ export default class RCONClient {
       Logger.server.warn(`Maximum timeouts reached (${this._cfgCommands.maxPacketTimeouts}), forcing a reconnect...`);
       this.forceReconnect();
     }
+
+    return wasTimeout;
   }
 
   async _markServerStatus(isUp: boolean, instant: boolean = false) {

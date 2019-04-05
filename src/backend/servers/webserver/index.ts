@@ -2,6 +2,7 @@ import * as path from 'path';
 import http from 'http';
 import koa from 'koa';
 import koaCors from '@koa/cors';
+import koaBodyparser from 'koa-bodyparser';
 import koaStatic from 'koa-static';
 import RootPath from '../../RootPath';
 import LoggerConfig from '../../util/LoggerConfig';
@@ -36,6 +37,7 @@ export default class KoaServer {
     this._httpServer = http.createServer(this._instance.callback());
     this._instance.use(koaCors());
     this._instance.use(koaStatic(staticPath));
+    this._instance.use(koaBodyparser());
 
     routes.bindRouter(this._instance);
 

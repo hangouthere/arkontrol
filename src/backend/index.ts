@@ -1,5 +1,7 @@
 import 'source-map-support/register';
 
+import fetch from 'node-fetch';
+
 import Database from './util/database';
 import ConfigParser from './util/ConfigParser';
 import KoaServer from './servers/webserver';
@@ -11,6 +13,8 @@ import WebSocketServer from './servers/WebSocketServer';
 
 // WebPack will copy this to our dist folder
 import './rconConfig';
+
+(global as any).fetch = fetch;
 
 const SERVER_PORT = parseInt(process.env.SERVER_PORT as string);
 
@@ -54,6 +58,9 @@ class BackendApp {
 
     const rconCmdList = new RCONCommandList(this._rconClient);
     const rconStatus = new RCONStatus(this._rconClient);
+
+    await rconCmdList.init();
+    await rconStatus.init();
   }
 }
 

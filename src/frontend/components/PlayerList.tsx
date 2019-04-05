@@ -1,41 +1,34 @@
+import { Icon, NonIdealState, Spinner } from '@blueprintjs/core';
+import { Cell, Column, Table } from '@blueprintjs/table';
 import React from 'react';
-import { NonIdealState, Icon } from '@blueprintjs/core';
-import { Table, Column, Cell } from '@blueprintjs/table';
 import { NavButton } from '../containers/NavButton';
-
-export interface Player {
-  userName: string;
-  steamId: string;
-  isOnline: boolean;
-  lastSeen: string;
-}
+import { IPlayer } from '../services/players';
+import { PlayersState } from '../store/reducers/players';
 
 const _buildNonIdealState = () => {
   const RefreshButton = <NavButton text="Reload" intent="warning" to="/" />;
 
-  return (
-    <NonIdealState
-      icon="issue"
-      title="No Players Detected"
-      description="Your server hasn't had any Players detected before. Once Players connect, they'll appear here."
-      action={RefreshButton}
-    />
+  const description = (
+    <React.Fragment>
+      Your server hasn't had any Players detected before.
+      <br />
+      Once Players connect, they'll appear here.
+    </React.Fragment>
   );
+
+  return <NonIdealState icon="issue" title="No Players Detected" description={description} action={RefreshButton} />;
 };
 
-const _sortPlayerStatus = (players: Array<Player>): Array<Player> => {
+const _sortPlayerStatus = (players: Array<IPlayer>): Array<IPlayer> => {
   // Sort by isOnline, then lastSeen
-  players.sort((a, b) => {
-    const isOnlineSort = Number(a.isOnline) > Number(b.isOnline);
-    const seenNewerSort = a.lastSeen > b.lastSeen;
+  return players.sort((a, b) => {
+    const seenNewerSort = new Date(a.lastSeen) < new Date(b.lastSeen);
 
-    return Number(isOnlineSort) || Number(seenNewerSort);
+    return seenNewerSort ? 1 : -1;
   });
-
-  return players;
 };
 
-const _buildPlayerCell = (player: Player, columnIndex: number) => {
+const _buildPlayerCell = (player: IPlayer, columnIndex: number) => {
   switch (columnIndex) {
     case 0:
       return <Cell>{player.userName}</Cell>;
@@ -44,7 +37,12 @@ const _buildPlayerCell = (player: Player, columnIndex: number) => {
     case 2:
       return (
         <Cell style={{ textAlign: 'center' }}>
-          <Icon icon={player.isOnline ? 'small-tick' : 'small-cross'} intent={player.isOnline ? 'success' : 'danger'} />
+          <React.Fragment>
+            <Icon
+              icon={player.isOnline ? 'small-tick' : 'small-cross'}
+              intent={player.isOnline ? 'success' : 'danger'}
+            />
+          </React.Fragment>
         </Cell>
       );
     case 3:
@@ -54,13 +52,14 @@ const _buildPlayerCell = (player: Player, columnIndex: number) => {
   }
 };
 
-const _buildPlayerList = (players: Array<Player>) => {
+const _buildPlayerList = (players: Array<IPlayer>) => {
   const playerRenderer = (rowIndex: number, columnIndex: number) => _buildPlayerCell(players[rowIndex], columnIndex);
 
   const columnWidths = [null, null, 70, 200];
 
   const playerTable = (
     <Table
+      className="playerListTable"
       numRows={players.length}
       columnWidths={columnWidths}
       enableColumnResizing={false}
@@ -77,16 +76,15 @@ const _buildPlayerList = (players: Array<Player>) => {
   return playerTable;
 };
 
-interface Props {
-  players?: Array<Player>;
-}
-
-const PlayerList: React.FC<Props> = (props: Props) => {
+const PlayerList: React.FC<PlayersState> = props => {
   let playerDisplay;
+
+  if (props.loading) {
+    return <Spinner size={75} />;
+  }
 
   const hasUsers = props.players && props.players.length > 0;
   const players = _sortPlayerStatus(props.players || []);
-
   playerDisplay = hasUsers ? _buildPlayerList(players) : _buildNonIdealState();
 
   return <React.Fragment>{playerDisplay}</React.Fragment>;

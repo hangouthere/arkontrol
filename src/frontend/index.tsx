@@ -1,7 +1,16 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import App from './components/App';
+import { Provider } from 'react-redux';
 
-import './assets/styles/app.scss';
+import App from './containers/App';
+import ReduxStore from './store';
 
-ReactDOM.render(<App />, document.getElementById('root'));
+const store = new ReduxStore().store;
+
+ReactDOM.render(
+  // tslint:disable-next-line: jsx-wrap-multiline
+  <Provider store={store}>
+    <App />
+  </Provider>,
+  document.getElementById('root')
+);

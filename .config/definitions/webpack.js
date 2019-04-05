@@ -8,7 +8,10 @@ const {
  * Resolve definitions for WebPack; particularly extensions that will resolve modules.
  */
 const Resolver = {
-  extensions: ['.js', '.ts', '.tsx', '.jsx', '.json']
+  extensions: ['.js', '.ts', '.tsx', '.jsx', '.json'],
+  alias: {
+    'react-dom': '@hot-loader/react-dom'
+  }
 };
 
 const WatchOptions = {

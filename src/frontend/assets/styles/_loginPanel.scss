@@ -1,0 +1,14 @@
+#LoginPanel {
+  width: 300px;
+  margin: 0 auto;
+
+  .formFooter {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 15px;
+  }
+
+  .bp3-intent-danger {
+    color: $pt-intent-danger;
+  }
+}

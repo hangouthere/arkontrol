@@ -9,14 +9,13 @@ const PromiseDelay = (t: number) => new Promise(r => setTimeout(r, t));
 export default class RCONCommandList {
   private _client: RCONClient;
   private _commandList!: Array<string>;
+  private _currentCommand!: string;
 
   constructor(client: RCONClient) {
     this._client = client;
-
-    this.init();
   }
 
-  async init() {
+  init = async () => {
     await ConfigParser.init();
 
     // Used to actually operate on throughout lifecycle
@@ -24,43 +23,62 @@ export default class RCONCommandList {
 
     this._client.instance.onDidConnect(this._processCurrentCommand);
 
-    this._processCurrentCommand();
+    this._processNextCommand();
   }
 
-  _processCurrentCommand = async (): Promise<any> => {
+  _processNextCommand = async (): Promise<any> => {
     // Start list over when we've reached the end
     if (0 === this._commandList.length) {
-      return setTimeout(this.init.bind(this), 0);
+      return setTimeout(this.init, 0);
     }
 
-    const currCommand = this._commandList.shift() as string;
-
-    Logger.info('RCON executing command:', currCommand);
-
-    let result = await this._execCurrentCommand(currCommand);
-    result = result.replace(/\s?\n\s?$/, ''); // Remove trailing newline
-
-    Logger.info('RCON Result:', result);
+    this._currentCommand = this._commandList.shift() as string;
 
     return this._processCurrentCommand();
   }
 
-  async _execCurrentCommand(currCommand: string) {
-    let promise: Promise<any> = Promise.resolve();
+  _processCurrentCommand = async () => {
+    Logger.info('RCON executing command:', this._currentCommand);
 
+    try {
+      let result = await this._execCurrentCommand(this._currentCommand);
+      result = result.replace(/\s?\n\s?$/, ''); // Remove trailing newline
+
+      Logger.info('RCON Result:', result);
+
+      return this._processNextCommand();
+    } catch (err) {
+      if ('Auth lost to server' === err) {
+        return this._client.connect();
+      }
+
+      // Check for timeout
+      const wasTimeout = this._client.markPossibleTimeout(err, this._currentCommand.split(' ')[0]);
+
+      if (wasTimeout) {
+        this._processCurrentCommand();
+      } else {
+        Logger.error('Unknown Error:', err);
+      }
+    }
+  }
+
+  async _execCurrentCommand(currCommand: string): Promise<string> {
     if (false === this._client.instance.authenticated) {
-      return Logger.error('Auth lost to server');
+      const msg = 'Auth lost to server';
+      Logger.error(msg);
+      return Promise.reject(msg);
     }
 
-    if ('wait ' === currCommand.substr(0, 5)) {
+    if (0 === currCommand.indexOf('wait')) {
       const [, delayStr] = currCommand.split(' ');
       const delay = parseInt(delayStr) || 1000;
 
-      promise = promise.then(() => PromiseDelay(delay * 1000));
+      await PromiseDelay(delay * 1000);
     }
 
-    promise = promise.then(() => this._client.instance.send(currCommand));
+    const response = await this._client.instance.send(currCommand);
 
-    return promise;
+    return response;
   }
 }

@@ -1,5 +1,5 @@
 import ConfigParser from './util/ConfigParser';
-import fetch from 'node-fetch';
+import wretch from 'wretch';
 
 const COLOR_DOWN = 16711680;
 const COLOR_UP = 65280;
@@ -36,11 +36,10 @@ class DiscordWebhook {
       ]
     };
 
-    return fetch(DiscordConfig.discordWebhookURL, {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return wretch(DiscordConfig.discordWebhookURL)
+      .content('application/json')
+      .post(payload)
+      .res();
   }
 }
 

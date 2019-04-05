@@ -19,7 +19,7 @@ class SocketDemo extends React.PureComponent<{}, IState> {
     lastMessage: 'Waiting for connection...'
   };
 
-  componentWillMount() {
+  componentDidMount() {
     this._ws = new WebSocket(`ws://${SOCKET_URI}`);
 
     this._ws.addEventListener('open', this._socketOpened.bind(this));
@@ -46,7 +46,9 @@ class SocketDemo extends React.PureComponent<{}, IState> {
     });
   }
 
-  _submit = (/* event: React.MouseEvent<HTMLButtonElement, MouseEvent> */) => {
+  _submit = (event: React.FormEvent) => {
+    event.preventDefault();
+
     this._ws.send(this.state.inputMessage);
 
     this.setState({
@@ -57,15 +59,18 @@ class SocketDemo extends React.PureComponent<{}, IState> {
   render() {
     return (
       <React.Fragment>
+        <h1>Socket Demo</h1>
         <section className="messageInput">
-          <InputGroup
-            className="longerTextGroup"
-            value={this.state.inputMessage}
-            onChange={this._updateText}
-            placeholder="Enter Message"
-            leftIcon="comment"
-          />
-          <Button text="Send" intent="success" onClick={this._submit} />
+          <form onSubmit={this._submit}>
+            <InputGroup
+              className="longerTextGroup"
+              value={this.state.inputMessage}
+              onChange={this._updateText}
+              placeholder="Enter Message"
+              leftIcon="comment"
+            />
+            <Button text="Send" intent="success" />
+          </form>
         </section>
 
         <TextArea className="socketLog" readOnly={true} value={this.state.lastMessage} rows={10} cols={66} />

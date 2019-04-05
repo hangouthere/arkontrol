@@ -1,12 +1,12 @@
 import React from 'react';
-import Navigation from './Navigation';
+import Navigation from '../containers/Navigation';
 
 const Layout: React.FC = props => {
   return (
-    <div className="layout bp3-dark">
+    <div id="Layout" className="bp3-dark">
       <Navigation />
 
-      <section className="content">{props.children}</section>
+      <section id="Content">{props.children}</section>
     </div>
   );
 };
