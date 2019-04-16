@@ -1,8 +1,8 @@
 import { Alignment, Navbar } from '@blueprintjs/core';
 import React from 'react';
 import { connect } from 'react-redux';
-import { IRootState } from '../store/reducers';
-import { IAuthState } from '../store/reducers/auth';
+import { IRootState } from '../../store/reducers';
+import { IAuthState } from '../../store/reducers/auth';
 import { NavButton } from './NavButton';
 
 interface IProps extends IAuthState, React.ButtonHTMLAttributes<HTMLButtonElement> {}
@@ -11,6 +11,7 @@ const Navigation: React.FC<IProps> = props => {
   const adminButtons = !props.user ? null : (
     <React.Fragment>
       <NavButton icon="crown" text="Admin Panel" to="/adminPanel" exact={true} className="bp3-minimal" />
+      <NavButton icon="badge" text="Auth Config" to="/authConfig" exact={true} className="bp3-minimal" />
     </React.Fragment>
   );
 
@@ -22,8 +23,6 @@ const Navigation: React.FC<IProps> = props => {
         <NavButton icon="user" text="Players" to="/" exact={true} className="bp3-minimal" />
 
         {adminButtons}
-
-        <NavButton icon="badge" text="Auth Config" to="/authConfig" exact={true} className="bp3-minimal" />
       </Navbar.Group>
 
       <Navbar.Group align={Alignment.RIGHT}>

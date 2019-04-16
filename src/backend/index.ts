@@ -1,15 +1,13 @@
-import 'source-map-support/register';
-
 import fetch from 'node-fetch';
-
+import 'source-map-support/register';
 import Database from './database';
-import ConfigParser from './util/ConfigParser';
-import KoaServer from './servers/webserver';
 import RCONClient from './rcon/RCONClient';
 import RCONCommandList from './rcon/RCONCommandList';
 import RCONStatus from './rcon/RCONStatus';
-import SocketMessageProxy from './SocketMessageProxy';
+import KoaServer from './servers/webserver';
 import WebSocketServer from './servers/WebSocketServer';
+import SocketMessageProxy from './SocketMessageProxy';
+import ConfigParser from './util/ConfigParser';
 
 // WebPack will copy this to our dist folder
 import './rconConfig';
@@ -65,6 +63,7 @@ class BackendApp {
 
   initSocketRCONProxy() {
     this._socketProxy = new SocketMessageProxy(this._socketServer, this._rconClient);
+    this._socketProxy.init();
   }
 }
 

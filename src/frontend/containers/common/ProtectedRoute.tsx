@@ -2,9 +2,9 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Redirect, Route, RouteComponentProps } from 'react-router';
 import { Dispatch } from 'redux';
-import { AuthActions } from '../store/actions/auth';
-import { IRootState } from '../store/reducers';
-import { IAuthState } from '../store/reducers/auth';
+import { AuthActions } from '../../store/actions/auth';
+import { IRootState } from '../../store/reducers';
+import { IAuthState } from '../../store/reducers/auth';
 
 interface IProps extends RouteComponentProps {
   component: React.ComponentType<RouteComponentProps<any>> | React.ComponentType<any>;

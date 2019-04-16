@@ -7,6 +7,8 @@ import { AuthConfigActions, IAuthConfigEntry } from '../store/actions/authConfig
 import { IRootState } from '../store/reducers';
 import { IAuthConfig, IAuthConfigState, ILoadingParts } from '../store/reducers/authConfig';
 
+const DEBOUNCE_UPDATE_DURATION = 1500;
+
 interface IProps {
   authConfigData: IAuthConfigState;
   getAuthConfig: typeof AuthConfigActions.getAuthConfig;
@@ -21,6 +23,15 @@ interface IState {
 class AuthConfigPage extends React.PureComponent<IProps, IState> {
   componentDidMount() {
     this._loadConfig();
+  }
+
+  componentWillUnmount() {
+    Object.entries(this.state.loadingParts).forEach(entry => {
+      if (entry && entry[1]) {
+        const timeoutSearch = entry[1].split('|');
+        clearTimeout(Number(timeoutSearch[1]));
+      }
+    });
   }
 
   async _loadConfig() {
@@ -45,11 +56,11 @@ class AuthConfigPage extends React.PureComponent<IProps, IState> {
     });
   }
 
-  changeConfigPart = (event: React.ChangeEvent<HTMLFormElement>) => {
+  changeConfigPart = async (event: React.ChangeEvent<HTMLFormElement>) => {
     const { name, value } = event.target;
 
     if (this.state.loadingParts && this.state.loadingParts[name]) {
-      clearTimeout(this.state.loadingParts[name]);
+      clearTimeout(this.state.loadingParts[name].split('|')[1]);
     }
 
     const updatePropTimeout = setTimeout(async () => {
@@ -58,10 +69,10 @@ class AuthConfigPage extends React.PureComponent<IProps, IState> {
         propValue: value
       });
 
-      this.updateLoadingPart(name, 'completed');
-    }, 3000);
+      this.updateLoadingPart(name, 'completed|');
+    }, DEBOUNCE_UPDATE_DURATION);
 
-    this.updateLoadingPart(name, updatePropTimeout);
+    this.updateLoadingPart(name, `changing|${updatePropTimeout}`);
   }
 
   _configForm() {

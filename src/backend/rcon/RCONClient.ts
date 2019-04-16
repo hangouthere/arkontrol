@@ -1,8 +1,10 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { Rcon } from 'rcon-client';
-import ConfigParser, { IConfig } from '../util/ConfigParser';
+import AuthConfigDAO from '../database/dao/AuthConfigDAO';
+import AuthConfig, { IAuthConfig } from '../database/models/AuthConfig';
 import DiscordWebhook from '../DiscordWebhook';
+import ConfigParser, { IConfig } from '../util/ConfigParser';
 import LoggerConfig, { LOG_PATH } from '../util/LoggerConfig';
 
 const serverSemaphore = 'serverWasDown';
@@ -18,18 +20,24 @@ export default class RCONClient {
   private _serverWasDown!: boolean;
   private _instance!: Rcon;
   private _connectionAttempts: number = 0;
-  private _cfgAuth!: IConfig['auth'];
-  private _cfgCommands!: IConfig['commands'];
   private _timeouts: number = 0;
+  private _authConfig!: IAuthConfig;
+  // TODO: Get rid of this!
+  private _cfgCommands!: IConfig['commands'];
 
   get instance() {
     return this._instance;
   }
 
   async init() {
+    const authConfigDAO = new AuthConfigDAO();
+    const configEntries = await authConfigDAO.getConfig();
+
+    this._authConfig = AuthConfig.fromDAO(configEntries).config;
+
+    // TODO: Getting good to get rid of!
     await ConfigParser.init();
 
-    this._cfgAuth = ConfigParser.config.auth;
     this._cfgCommands = ConfigParser.config.commands;
 
     this._serverWasDown = fs.existsSync(STATUS_SEMAPHORE_FILE);
@@ -44,19 +52,26 @@ export default class RCONClient {
   }
 
   _detectDisconnection = async (err: Error) => {
-    if (err.message.includes('connect ETIMEDOUT') || err.message.includes('read ECONNRESET')) {
-      if (this._connectionAttempts >= this._cfgCommands.maxConnectionAttempts) {
-        this._markServerStatus(false);
-        return;
-      }
-
+    if (err.message.includes('connect ECONNREFUSED') || err.message.includes('connect ETIMEDOUT')) {
       Logger.server.error(
         'RCON Could not connect to specified host/port combination.\n' +
           'Please make sure:\n' +
           '\t1) The server is up\n' +
           '\t2) You have RCON enabled on the server\n' +
-          '\t3) The configuration is set correctly.'
+          '\t3) The Auth Config is set correctly.'
       );
+
+      this._markServerStatus(false, true);
+      return;
+    }
+
+    if (err.message.includes('read ECONNRESET')) {
+      Logger.server.error('RCON Disconnect from Server');
+
+      if (this._connectionAttempts >= this._cfgCommands.maxConnectionAttempts) {
+        this._markServerStatus(false);
+        return;
+      }
 
       return this.connect();
     }
@@ -73,17 +88,23 @@ export default class RCONClient {
     try {
       this._connectionAttempts++;
 
+      const { host, port, password } = this._authConfig;
+
       Logger.server.info(
         `RCON Attempt connection (${this._connectionAttempts}/${this._cfgCommands.maxConnectionAttempts}) to ${
-          this._cfgAuth.host
-        }:${this._cfgAuth.port}...`
+          host.value
+        }:${port.value}...`
       );
 
       this._instance = new Rcon({
         packetResponseTimeout: 5000
       });
 
-      await this._instance.connect(this._cfgAuth);
+      await this._instance.connect({
+        host: host.value,
+        port: Number(port.value),
+        password: password.value
+      });
 
       this._markServerStatus(true);
 
@@ -158,9 +179,19 @@ export default class RCONClient {
 }
 
 process.on('unhandledRejection', (error: any) => {
-  console.log('------------------------------------ unhandledRejection\n', error);
+  Logger.debug.error('----> unhandledRejection\n', error);
 });
 
-process.on('uncaughtException', (error: any) => {
-  console.log('------------------------------------ uncaughtException\n', error);
+process.on('uncaughtException', (err: any) => {
+  const knownError =
+    err.message.includes('connect ECONNREFUSED') ||
+    err.message.includes('connect ETIMEDOUT') ||
+    err.message.includes('read ECONNRESET');
+
+  if (knownError) {
+    return;
+  }
+
+  Logger.debug.error('----> uncaughtException\n', err);
+  throw err;
 });

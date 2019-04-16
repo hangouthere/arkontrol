@@ -23,7 +23,7 @@ class Database {
 
     this._instance = await sqlite.open(USERS_DB, { verbose: true });
     await this._instance.migrate({
-      force: 'development' === process.env.NODE_ENV ? 'last' : '',
+      // force: 'development' === process.env.NODE_ENV ? 'last' : '',
       migrationsPath: MIGRATION_PATH
     });
   }

@@ -28,7 +28,9 @@ class AdminRoutes {
   }
 
   saveConfigPart = async (ctx: Context) => {
-    ctx.response.body = await this._authConfigDAO.saveConfigPart(ctx.request.body);
+    await this._authConfigDAO.saveConfigPart(ctx.request.body);
+
+    return this.getConfig(ctx);
   }
 }
 

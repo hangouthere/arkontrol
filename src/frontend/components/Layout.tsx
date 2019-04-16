@@ -1,5 +1,5 @@
 import React from 'react';
-import Navigation from '../containers/Navigation';
+import Navigation from '../containers/common/Navigation';
 
 const Layout: React.FC = props => {
   return (

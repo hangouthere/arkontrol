@@ -7,7 +7,7 @@ import AuthConfigPage from './containers/AuthConfigPage';
 import LoginPage from './containers/LoginPage';
 import Logout from './containers/LogoutPage';
 import PlayerListPage from './containers/PlayerListPage';
-import ProtectedRoute from './containers/ProtectedRoute';
+import ProtectedRoute from './containers/common/ProtectedRoute';
 
 const AUTH_PATH = '/login';
 

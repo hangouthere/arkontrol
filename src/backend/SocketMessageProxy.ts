@@ -16,7 +16,9 @@ export default class SocketMessageProxy {
   constructor(socketServer: WebSocketServer, rconClient: RCONClient) {
     this._webSocketServer = socketServer;
     this._rconClient = rconClient;
+  }
 
+  init() {
     this._webSocketServer.on('connection', this.addConnection);
     this._webSocketServer.on('message', this.consumeMessage);
   }
