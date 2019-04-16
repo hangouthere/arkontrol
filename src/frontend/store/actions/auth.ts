@@ -23,6 +23,7 @@ export const AuthActions: IActionCreatorTree = {
     payload: AuthService.login(loginData)
   }),
   logoutRequest: () => ({
-    type: AuthActionTypes.LOGOUT
+    type: AuthActionTypes.LOGOUT,
+    payload: AuthService.logout()
   })
 };

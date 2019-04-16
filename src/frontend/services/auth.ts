@@ -1,4 +1,3 @@
-import jwtDecode from 'jwt-decode';
 import BaseService from './base';
 
 export interface IAuthRequest {
@@ -7,28 +6,32 @@ export interface IAuthRequest {
 }
 
 export interface IUser extends IAuthRequest {
+  exp: number;
   role: string;
   lastLogin: string;
 }
 
 class AuthService extends BaseService {
-  _user!: IUser;
-
-  get currentUser() {
-    return this._user;
-  }
-
   async login(loginInfo?: IAuthRequest) {
     if (!loginInfo) {
       return undefined;
     }
 
-    this._user = await this._baseUrl
+    const token = await this._baseUrl
       .url('login')
       .post(loginInfo)
-      .json(j => jwtDecode(j.token));
+      .json(j => j.token);
 
-    return this._user;
+    BaseService.token = token;
+
+    localStorage.setItem('_token', token);
+
+    return this.currentUser;
+  }
+
+  logout() {
+    BaseService.token = undefined;
+    localStorage.removeItem('_token');
   }
 }
 

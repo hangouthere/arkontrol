@@ -2,13 +2,13 @@ import typeToReducer from 'type-to-reducer';
 import { PlayersActionTypes } from './../actions/players';
 import { IPlayer } from '../../services/players';
 
-export interface PlayersState {
+export interface IPlayersState {
   loading: boolean;
   players?: Array<IPlayer>;
   error?: Error;
 }
 
-const INITIAL_STATE: PlayersState = {
+const INITIAL_STATE: IPlayersState = {
   loading: false,
   players: undefined,
   error: undefined

@@ -1,15 +1,14 @@
+import { PromiseDelay } from '../../commonUtil';
 import ConfigParser from '../util/ConfigParser';
 import LoggerConfig from '../util/LoggerConfig';
 import RCONClient from './RCONClient';
 
 const Logger = LoggerConfig.instance.getLogger('commands');
 
-const PromiseDelay = (t: number) => new Promise(r => setTimeout(r, t));
-
 export default class RCONCommandList {
   private _client: RCONClient;
   private _commandList!: Array<string>;
-  private _currentCommand!: string;
+  private _currentCommand: string = '';
 
   constructor(client: RCONClient) {
     this._client = client;
@@ -23,7 +22,9 @@ export default class RCONCommandList {
 
     this._client.instance.onDidConnect(this._processCurrentCommand);
 
-    this._processNextCommand();
+    if (true === this._client.instance.authenticated) {
+      this._processNextCommand();
+    }
   }
 
   _processNextCommand = async (): Promise<any> => {
@@ -38,13 +39,17 @@ export default class RCONCommandList {
   }
 
   _processCurrentCommand = async () => {
-    Logger.info('RCON executing command:', this._currentCommand);
+    if (!this._currentCommand) {
+      return this._processNextCommand();
+    }
+
+    Logger.info('[CmdList] Exec:', this._currentCommand);
 
     try {
       let result = await this._execCurrentCommand(this._currentCommand);
       result = result.replace(/\s?\n\s?$/, ''); // Remove trailing newline
 
-      Logger.info('RCON Result:', result);
+      Logger.info('[CmdList] Result:', result);
 
       return this._processNextCommand();
     } catch (err) {
@@ -58,14 +63,14 @@ export default class RCONCommandList {
       if (wasTimeout) {
         this._processCurrentCommand();
       } else {
-        Logger.error('Unknown Error:', err);
+        Logger.error('[CmdList] Unknown Error:', err);
       }
     }
   }
 
   async _execCurrentCommand(currCommand: string): Promise<string> {
     if (false === this._client.instance.authenticated) {
-      const msg = 'Auth lost to server';
+      const msg = '[CmdList] Auth lost to server';
       Logger.error(msg);
       return Promise.reject(msg);
     }

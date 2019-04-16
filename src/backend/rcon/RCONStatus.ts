@@ -1,6 +1,6 @@
-import Database from '../util/database';
+import PlayersDAO from '../database/dao/PlayersDAO';
 import LoggerConfig from '../util/LoggerConfig';
-import { importPlayers, Player } from './../util/database/models/Player';
+import Player from '../database/models/Player';
 import RCONClient from './RCONClient';
 
 const CHAT_BUFFER_FREQ = 10 * 1000;
@@ -14,13 +14,16 @@ const Logger = {
 
 export default class RCONStatus {
   private _client: RCONClient;
-  private _interval!: Array<number>;
+  private _interval: Array<number> = [];
+  private _dao!: PlayersDAO;
 
   constructor(client: RCONClient) {
     this._client = client;
   }
 
   async init() {
+    this._dao = new PlayersDAO();
+
     this._client.instance.onDidConnect(this._startIntervals);
 
     this._client.instance.onDidDisconnect(() => {
@@ -28,7 +31,9 @@ export default class RCONStatus {
       this._interval = [];
     });
 
-    this._startIntervals();
+    if (true === this._client.instance.authenticated) {
+      this._startIntervals();
+    }
   }
 
   _startIntervals = () => {
@@ -59,11 +64,11 @@ export default class RCONStatus {
       // Skip bogus responses...
       if (true === response.includes('No Players Connected')) {
         await this._updatePresence([]);
-        await Database.setAllPlayersOffline();
+        await this._dao.setAllPlayersOffline();
         return;
       }
 
-      let newUserList = importPlayers(response);
+      let newUserList = Player.fromRCON(response);
       await this._updatePresence(newUserList);
     } catch (err) {
       this._client.markPossibleTimeout(err, 'listplayers');
@@ -74,7 +79,7 @@ export default class RCONStatus {
     const joins: Array<Player> = [];
     const leaves: Array<Player> = [];
 
-    const onlinePlayers = await Database.getOnlinePlayers();
+    const onlinePlayers = await this._dao.getOnlinePlayers();
 
     const existingUserNames = onlinePlayers.map(u => u.userName);
     const newUserNames = newUserList.map(u => u.userName);
@@ -99,7 +104,7 @@ export default class RCONStatus {
       Logger.presence.info(`${l.userName} has joined the server.`);
     });
 
-    await Database.updatePlayerList(leaves, false);
-    await Database.updatePlayerList(joins, true);
+    await this._dao.updatePlayerList(leaves, false);
+    await this._dao.updatePlayerList(joins, true);
   }
 }

@@ -21,7 +21,7 @@ export default class WebSocketServer extends EventEmitter {
     this.emit('connection', socket);
 
     socket.on('message', (message: WebSocket.Data) => {
-      this.emit('message', socket, message);
+      this.emit('message', message, socket);
     });
   }
 }

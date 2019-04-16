@@ -22,7 +22,6 @@ export interface IConfig {
   commands: {
     maxConnectionAttempts: number;
     maxPacketTimeouts: number;
-    adminUserName?: string;
   };
 
   discord: {

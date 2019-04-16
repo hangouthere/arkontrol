@@ -2,6 +2,7 @@
 node_modules
 _dist
 _build
+__BACKUP
 
 # Secret Secure Data
 **/rconConfig/config.json

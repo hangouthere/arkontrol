@@ -5,7 +5,6 @@
     "password": "adminPassword"
   },
   "commands": {
-    "adminUserName": "Admin",
     "maxConnectionAttempts": 5,
     "maxPacketTimeouts": 5
   },

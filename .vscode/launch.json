@@ -10,6 +10,13 @@
       "name": "Attach",
       "port": 9229,
       "timeout": 30000
+    },
+    {
+      "name": "Attach to Chrome",
+      "type": "chrome",
+      "request": "attach",
+      "port": 9222,
+      "webRoot": "${workspaceFolder}/_dist/public"
     }
   ]
 }

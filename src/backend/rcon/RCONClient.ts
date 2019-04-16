@@ -65,7 +65,7 @@ export default class RCONClient {
     return;
   }
 
-  async connect() {
+  async connect(): Promise<Rcon> {
     // rcon-client throws an uncaught exception for some reason... Catch here and handle it!
     process.off('uncaughtException', this._detectDisconnection);
     process.once('uncaughtException', this._detectDisconnection);
@@ -100,12 +100,14 @@ export default class RCONClient {
         this._markServerStatus(false, true);
       }
 
-      this.markPossibleTimeout(err, 'Authentication');
+      const timedout = this.markPossibleTimeout(err, 'Authentication');
+
+      if (timedout) {
+        return await this.connect();
+      }
     } finally {
       return this._instance;
     }
-
-    return;
   }
 
   markPossibleTimeout(err: Error, type: string) {
@@ -156,5 +158,9 @@ export default class RCONClient {
 }
 
 process.on('unhandledRejection', (error: any) => {
-  console.log('------------------------------------ unhandledRejection', error);
+  console.log('------------------------------------ unhandledRejection\n', error);
+});
+
+process.on('uncaughtException', (error: any) => {
+  console.log('------------------------------------ uncaughtException\n', error);
 });

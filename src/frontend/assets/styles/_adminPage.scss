@@ -1,0 +1,50 @@
+#AdminPage {
+  section {
+    & > *:not(:last-child) {
+      margin-right: 20px;
+    }
+  }
+
+  .timeOfDay.timeOfDay {
+    margin-bottom: 30px;
+  }
+
+  .rawCommand {
+    margin-top: 30px;
+  }
+}
+
+#AuthConfigPage {
+  .bp3-popover-wrapper {
+    display: inline-block;
+
+    .bp3-icon {
+      vertical-align: middle;
+    }
+  }
+
+  .configForm {
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .portInput {
+    width: 80px;
+  }
+
+  .bp3-intent-warning {
+    .bp3-input,
+    .bp3-input:focus {
+      box-shadow: 0 0 0 2px #fffb00, 0 0 0 2px #fffb00, 0 0 0 5px rgba(19, 124, 189, 0.3),
+        inset 0 0 0 2px rgba(16, 22, 26, 0.3), inset 0 2px 2px rgba(16, 22, 26, 0.4);
+    }
+  }
+
+  .bp3-intent-success {
+    .bp3-input,
+    .bp3-input:focus {
+      box-shadow: 0 0 0 2px #00d123, 0 0 0 2px #00d123, 0 0 0 5px rgba(19, 124, 189, 0.3),
+        inset 0 0 0 2px rgba(16, 22, 26, 0.3), inset 0 2px 2px rgba(16, 22, 26, 0.4);
+    }
+  }
+}

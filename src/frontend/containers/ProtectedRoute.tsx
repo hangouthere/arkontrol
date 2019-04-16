@@ -4,12 +4,12 @@ import { Redirect, Route, RouteComponentProps } from 'react-router';
 import { Dispatch } from 'redux';
 import { AuthActions } from '../store/actions/auth';
 import { IRootState } from '../store/reducers';
-import { AuthState } from '../store/reducers/auth';
+import { IAuthState } from '../store/reducers/auth';
 
 interface IProps extends RouteComponentProps {
   component: React.ComponentType<RouteComponentProps<any>> | React.ComponentType<any>;
   authPath: string;
-  authInfo: AuthState;
+  authInfo: IAuthState;
   setRedirect: typeof AuthActions.setRedirect;
 }
 

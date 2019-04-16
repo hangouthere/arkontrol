@@ -1,6 +1,14 @@
-#PlayerListContainer {
+#PlayerListPage {
   .playerListTable {
-    width: 600px;
+    width: 580px;
     margin: 0 auto;
+
+    &.adminPlayerList {
+      width: 700px;
+    }
+  }
+
+  .messageInput > *:not(:last-child) {
+    margin-right: 10px;
   }
 }

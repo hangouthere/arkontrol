@@ -31,8 +31,6 @@ export default class KoaServer {
     const staticPath = path.resolve(RootPath, options.publicPath);
     const routes = new Routes();
 
-    routes.init();
-
     this._instance = new koa();
     this._httpServer = http.createServer(this._instance.callback());
     this._instance.use(koaCors());

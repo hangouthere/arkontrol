@@ -2,7 +2,7 @@ import 'source-map-support/register';
 
 import fetch from 'node-fetch';
 
-import Database from './util/database';
+import Database from './database';
 import ConfigParser from './util/ConfigParser';
 import KoaServer from './servers/webserver';
 import RCONClient from './rcon/RCONClient';
@@ -37,6 +37,7 @@ class BackendApp {
     this.initWebServer();
     this.initSocketServer();
     this.initRCONClient();
+    this.initSocketRCONProxy();
   }
 
   initWebServer() {
@@ -48,7 +49,6 @@ class BackendApp {
 
   initSocketServer() {
     this._socketServer = new WebSocketServer(this._koaServer.httpServer);
-    this._socketProxy = new SocketMessageProxy(this._socketServer);
   }
 
   async initRCONClient() {
@@ -61,6 +61,10 @@ class BackendApp {
 
     await rconCmdList.init();
     await rconStatus.init();
+  }
+
+  initSocketRCONProxy() {
+    this._socketProxy = new SocketMessageProxy(this._socketServer, this._rconClient);
   }
 }
 

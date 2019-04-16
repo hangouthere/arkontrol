@@ -5,4 +5,4 @@ export interface IAction<IPayload> {
 
 export type IActionCreator<InputPayload = undefined, OutputPayload = undefined> = (
   inputPayload?: InputPayload
-) => IAction<OutputPayload>;
+) => IAction<OutputPayload> | any;

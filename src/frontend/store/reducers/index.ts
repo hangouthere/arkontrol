@@ -1,11 +1,12 @@
 import { combineReducers } from 'redux';
-
-import { AuthReducers, AuthState } from './auth';
-import { PlayersReducers, PlayersState } from './players';
+import { AuthConfigReducers, IAuthConfigState } from './authConfig';
+import { AuthReducers, IAuthState } from './auth';
+import { IPlayersState, PlayersReducers } from './players';
 
 export interface IRootState {
-  Auth: AuthState;
-  Players: PlayersState;
+  AuthConfig: IAuthConfigState;
+  Auth: IAuthState;
+  Players: IPlayersState;
 }
 
 export default class RootReducerCreator {
@@ -13,6 +14,7 @@ export default class RootReducerCreator {
 
   constructor() {
     this.rootReducer = combineReducers({
+      AuthConfig: AuthConfigReducers,
       Auth: AuthReducers,
       Players: PlayersReducers
     });

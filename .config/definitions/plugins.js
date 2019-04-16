@@ -22,7 +22,7 @@ const {
 const CopyDBMigrations = new CopyPlugin([
   // Copy Migrations
   {
-    from: path.resolve(RootDir, 'src', BackendOutputInfo.MainName, 'util', 'database', 'migrations'),
+    from: path.resolve(RootDir, 'src', BackendOutputInfo.MainName, 'database', 'migrations'),
     to: path.join('database', 'migrations')
   }
 ]);

@@ -1,23 +1,39 @@
 import { Context } from 'koa';
-import { IMiddleware } from 'koa-router';
 import jwt from 'koa-jwt';
+import compose from 'koa-compose';
+import { IMiddleware } from 'koa-router';
+import { IUser } from '../../../database/models/User';
 
 export const JWT_SECRET = process.env.SECRET || 'secret';
 
-export const koaJwt = jwt({
+const catchJWTErrors = (ctx: Context, next: () => Promise<any>) => {
+  return next().catch(err => {
+    if (err.status === 401) {
+      ctx.status = 401;
+      ctx.body = {
+        error: err.originalError ? err.originalError.message : err.message
+      };
+    } else {
+      throw err;
+    }
+  });
+};
+
+const koaJWT = jwt({
   secret: JWT_SECRET,
   tokenKey: 'token'
 });
 
-export function hasRoles(roles: Array<string>): IMiddleware {
-  return async (ctx: Context, next: () => Promise<any>) => {
-    // TODO: Get a user on the state
-    const user: any = ctx.state.user;
-    // const user: AuthUser = ctx.state.user;
+export const JTWVerify = compose([catchJWTErrors, koaJWT]);
 
-    // TODO: Make `roles` an array to scan through
-    if (roles.indexOf(user.roles) < 0) {
-      throw new Error("Permission denied: User doesn't have the right role");
+export function hasAnyRole(roles: Array<string>): IMiddleware {
+  return async (ctx: Context, next: () => Promise<any>) => {
+    const user: IUser = ctx.state.user;
+
+    const hasARole = roles.some(r => (user.roles as Array<string>).includes(r));
+
+    if (false === hasARole) {
+      ctx.throw(403, "User doesn't have the right role");
     }
 
     await next();

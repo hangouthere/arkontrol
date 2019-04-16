@@ -1,8 +1,29 @@
 {
   "list": [
-    "broadcast <RichColor Color=\"0, 1, 0, 1\">Congratulations!</> ArKontrol is operational!",
-    "wait 10",
-    "broadcast <RichColor Color=\"0.95, 0.45, 0.2, 1\">Now go forth</>, and configure your \"commands.json\" to build a set of commands to run when you want!",
-    "wait 30"
+    "wait 30000",
+    "broadcast sorry for the spam coming your way",
+    "wait 30",
+    "broadcast still coming, testing shit out",
+    "wait 30",
+    "broadcast it'll keep popping up as I work on stuff",
+    "wait 3600",
+    "broadcast <RichColor Color=\"0, 1, 0, 1\">ATTENTION NEW SURVIVALISTS!</> Be sure you're following us on<RichColor Color=\"0.12, 0.73, 0.93, 1\">Mixer</> and<RichColor Color=\"0.44, 0.54, 0.85, 1\">Discord</> (with the Ark role) and register your player with the Community! If you're not active on <RichColor Color=\"0.44, 0.54, 0.85, 1\">Discord</>, you won't last here very long! <RichColor Color=\"0.44, 0.54, 0.85, 1\">http://rebrand.ly/nfgDiscord</>",
+    "wait 900",
+    "broadcast <RichColor Color=\"0.95, 0.45, 0.2, 1\">Did You Know?</> We have XP settings customized in an interesting way - you pretty much ONLY get XP for killing and crafting.                                   New players will want to purchase dinos from other players to get started, and you'll level up fast!",
+    "wait 900",
+    "broadcast Hey, we love<RichColor Color=\"1, 0, 0, 1\"><3</> you all, but we can only have ONE favorite. Sheesh - don't make it obvious! So we're <RichColor Color=\"1, 1, 0, 1\">NOT ACCEPTING GIFTS/PRESENTS/FREE STUFF</> from anyone!",
+    "wait 900",
+    "broadcast <RichColor Color=\"0.95, 0.45, 0.2, 1\">Did You Know?</> We host regular<RichColor Color=\"0.86, 0.42, 0.05, 1\">Events</> on the server, most being PvP! Satisfy your need to <RichColor Color=\"1, 0, 0, 1\">KILL</> by keeping up with the<RichColor Color=\"0.65, 0.46, 0.94, 1\">Community</> on<RichColor Color=\"0.44, 0.54, 0.85, 1\">Discord http://rebrand.ly/nfgDiscord</>",
+    "wait 900",
+    "broadcast See someone you haven't seen before, doing things you don't agree with? Report suspicious activity - If you see something, say something!",
+    "wait 900",
+    "broadcast <RichColor Color=\"0.95, 0.45, 0.2, 1\">Did You Know?</> There are <RichColor Color=\"0.65, 0.46, 0.94, 1\">Community Coops</> scattered on the map for grinding near resource-rich areas! Find more out on <RichColor Color=\"0.44, 0.54, 0.85, 1\">Discord http://rebrand.ly/nfgDiscord</>",
+    "wait 900",
+    "broadcast Theives are NOT tolerated on this server. We are PvE, follow the basic rule of <RichColor Color=\"1, 0, 0, 1\">DON'T BE A DICK!</>",
+    "wait 900",
+    "broadcast Be sure to read the<RichColor Color=\"0.1, 0.22, 0.55, 1\">RULES</>, find <RichColor Color=\"0.65, 0.46, 0.94, 1\">Community</> locations, and ask questions and make deals on<RichColor Color=\"0.44, 0.54, 0.85, 1\">Discord</> in the<RichColor Color=\"0.31, 0.74, 0.31, 1\">Ark</> channels! <RichColor Color=\"0.44, 0.54, 0.85, 1\">http://rebrand.ly/nfgDiscord</>",
+    "wait 900",
+    "broadcast Have a cool idea for the server? Let us know on<RichColor Color=\"0.44, 0.54, 0.85, 1\">Discord</>!",
+    "wait 3600"
   ]
 }
