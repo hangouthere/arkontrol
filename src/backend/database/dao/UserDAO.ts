@@ -39,7 +39,6 @@ class UserDAO extends BaseDAO {
   }
 
   async createUser(userName: string, passwd: string, role: string = 'admin') {
-    //TODO: Catch errors?
     await this._db.run(
       `INSERT INTO Users (userName, password, role) VALUES (?, ?, ?)`,
       userName,

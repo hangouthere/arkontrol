@@ -3,31 +3,40 @@ import { PromiseDelay } from '../commonUtil';
 import RCONClient from './rcon/RCONClient';
 import WebSocketServer from './servers/WebSocketServer';
 import LoggerConfig from './util/LoggerConfig';
+import MessagingBus, { EventMessages } from './util/MessagingBus';
 
 const Logger = LoggerConfig.instance.getLogger('commands');
 
 const ID_ARK_COMMAND = 'arkCommand::';
 const ID_SYS_COMMAND = 'sysCommand::';
 
+interface ISocketMessageProxyInitOptions {
+  socketServer: WebSocketServer;
+  rconClient: RCONClient;
+  messagingBus: MessagingBus;
+}
+
 export default class SocketMessageProxy {
   private _webSocketServer: WebSocketServer;
   private _rconClient: RCONClient;
+  private _messagingBus: MessagingBus;
 
-  constructor(socketServer: WebSocketServer, rconClient: RCONClient) {
-    this._webSocketServer = socketServer;
-    this._rconClient = rconClient;
+  constructor(options: ISocketMessageProxyInitOptions) {
+    this._webSocketServer = options.socketServer;
+    this._rconClient = options.rconClient;
+    this._messagingBus = options.messagingBus;
   }
 
   init() {
-    this._webSocketServer.on('connection', this.addConnection);
-    this._webSocketServer.on('message', this.consumeMessage);
+    this._messagingBus.on(EventMessages.Socket.Connected, this.addConnection);
+    this._messagingBus.on(EventMessages.Socket.Message, this.consumeMessage);
   }
 
   addConnection(socket: WebSocket) {
     socket.send('You have connected!');
   }
 
-  consumeMessage = (data: WebSocket.Data /*, _socket: WebSocket */) => {
+  consumeMessage = (data: WebSocket.Data, _socket: WebSocket) => {
     const message = data as string;
 
     if (0 === message.indexOf(ID_ARK_COMMAND)) {

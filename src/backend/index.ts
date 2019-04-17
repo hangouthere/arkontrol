@@ -1,5 +1,9 @@
-import fetch from 'node-fetch';
 import 'source-map-support/register';
+// TODO: Get rid of this!
+// WebPack will copy this to our dist folder
+import './rconConfig';
+
+import fetch from 'node-fetch';
 import Database from './database';
 import RCONClient from './rcon/RCONClient';
 import RCONCommandList from './rcon/RCONCommandList';
@@ -8,9 +12,7 @@ import KoaServer from './servers/webserver';
 import WebSocketServer from './servers/WebSocketServer';
 import SocketMessageProxy from './SocketMessageProxy';
 import ConfigParser from './util/ConfigParser';
-
-// WebPack will copy this to our dist folder
-import './rconConfig';
+import MessagingBus from './util/MessagingBus';
 
 (global as any).fetch = fetch;
 
@@ -21,6 +23,7 @@ class BackendApp {
   private _socketServer!: WebSocketServer;
   private _socketProxy!: SocketMessageProxy;
   private _rconClient!: RCONClient;
+  private _messagingBus!: MessagingBus;
 
   constructor() {
     console.log(`Node Version: ${process.versions.node}`);
@@ -29,6 +32,8 @@ class BackendApp {
   }
 
   async init() {
+    this._messagingBus = new MessagingBus();
+
     await Database.init();
     await ConfigParser.init();
 
@@ -40,17 +45,23 @@ class BackendApp {
 
   initWebServer() {
     this._koaServer = new KoaServer({
+      messagingBus: this._messagingBus,
       port: SERVER_PORT,
       publicPath: '../public'
     });
   }
 
   initSocketServer() {
-    this._socketServer = new WebSocketServer(this._koaServer.httpServer);
+    this._socketServer = new WebSocketServer({
+      httpServer: this._koaServer.httpServer,
+      messagingBus: this._messagingBus
+    });
   }
 
   async initRCONClient() {
-    this._rconClient = new RCONClient();
+    this._rconClient = new RCONClient({
+      messagingBus: this._messagingBus
+    });
 
     await this._rconClient.init();
 
@@ -62,7 +73,12 @@ class BackendApp {
   }
 
   initSocketRCONProxy() {
-    this._socketProxy = new SocketMessageProxy(this._socketServer, this._rconClient);
+    this._socketProxy = new SocketMessageProxy({
+      messagingBus: this._messagingBus,
+      rconClient: this._rconClient,
+      socketServer: this._socketServer
+    });
+
     this._socketProxy.init();
   }
 }

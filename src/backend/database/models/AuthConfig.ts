@@ -15,8 +15,8 @@ export interface IAuthConfig {
   password: IAuthConfigTuple;
   maxConnectionAttempts: IAuthConfigTuple;
   maxPacketTimeouts: IAuthConfigTuple;
-  discordAdminName?: IAuthConfigTuple;
-  discordWebhookURL?: IAuthConfigTuple;
+  discordAdminName: IAuthConfigTuple;
+  discordWebhookURL: IAuthConfigTuple;
 }
 
 class AuthConfig {

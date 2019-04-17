@@ -1,18 +1,20 @@
-import * as path from 'path';
+import koaCors from '@koa/cors';
 import http from 'http';
 import koa from 'koa';
-import koaCors from '@koa/cors';
 import koaBodyparser from 'koa-bodyparser';
 import koaStatic from 'koa-static';
+import * as path from 'path';
 import RootPath from '../../RootPath';
 import LoggerConfig from '../../util/LoggerConfig';
-import Routes from './Routes';
+import MessagingBus from '../../util/MessagingBus';
+import Routes from './routes';
 
 const Logger = LoggerConfig.instance.getLogger('server');
 
 interface IKoaServerInitOptions {
   publicPath: string;
   port: number;
+  messagingBus: MessagingBus;
 }
 
 export default class KoaServer {
@@ -29,7 +31,7 @@ export default class KoaServer {
 
   constructor(options: IKoaServerInitOptions) {
     const staticPath = path.resolve(RootPath, options.publicPath);
-    const routes = new Routes();
+    const routes = new Routes(options.messagingBus);
 
     this._instance = new koa();
     this._httpServer = http.createServer(this._instance.callback());

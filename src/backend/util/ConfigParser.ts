@@ -9,53 +9,22 @@ const mainConfigName = 'config.json';
 const commandsConfigName = 'commands.json';
 
 const configRoot = path.join(RootPath, rconConfigName);
-const mainConfig = path.join(configRoot, mainConfigName);
 const commandsConfig = path.join(configRoot, commandsConfigName);
-
-export interface IConfig {
-  auth: {
-    host: string;
-    port: number;
-    password: string;
-  };
-
-  commands: {
-    maxConnectionAttempts: number;
-    maxPacketTimeouts: number;
-  };
-
-  discord: {
-    discordAdminName: string;
-    discordWebhookURL: string;
-  };
-}
 
 interface ICommands {
   list: Array<string>;
 }
 
 export class ConfigParser {
-  private _config!: IConfig;
   private _commands!: ICommands;
-
-  get config() {
-    return this._config;
-  }
 
   get commands() {
     return this._commands;
   }
 
   async init() {
-    if (this._config && this._commands) {
+    if (this._commands) {
       return Promise.resolve();
-    }
-
-    try {
-      this._config = await fs.readJson(mainConfig);
-    } catch (err) {
-      LoggerConfig.instance.getLogger().error(`Missing Main Config in: ${mainConfig}`);
-      process.exit(99);
     }
 
     try {

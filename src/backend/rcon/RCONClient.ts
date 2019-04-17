@@ -4,8 +4,9 @@ import { Rcon } from 'rcon-client';
 import AuthConfigDAO from '../database/dao/AuthConfigDAO';
 import AuthConfig, { IAuthConfig } from '../database/models/AuthConfig';
 import DiscordWebhook from '../DiscordWebhook';
-import ConfigParser, { IConfig } from '../util/ConfigParser';
+import ConfigParser from '../util/ConfigParser';
 import LoggerConfig, { LOG_PATH } from '../util/LoggerConfig';
+import MessagingBus, { EventMessages } from '../util/MessagingBus';
 
 const serverSemaphore = 'serverWasDown';
 const STATUS_SEMAPHORE_FILE = path.join(LOG_PATH, serverSemaphore);
@@ -16,39 +17,67 @@ const Logger = {
   presence: LoggerConfig.instance.getLogger('presence')
 };
 
+interface IRconClientInitOptions {
+  messagingBus: MessagingBus;
+}
+
 export default class RCONClient {
+  private _messagingBus: MessagingBus;
   private _serverWasDown!: boolean;
   private _instance!: Rcon;
   private _connectionAttempts: number = 0;
   private _timeouts: number = 0;
   private _authConfig!: IAuthConfig;
-  // TODO: Get rid of this!
-  private _cfgCommands!: IConfig['commands'];
+  private _discordWH!: DiscordWebhook;
 
   get instance() {
     return this._instance;
   }
 
+  constructor(options: IRconClientInitOptions) {
+    this._messagingBus = options.messagingBus;
+
+    this._messagingBus.on(EventMessages.AuthConfig.Updated, this._configChanged);
+  }
+
   async init() {
+    // TODO: Get rid of this!
+    await ConfigParser.init();
+
+    await this._loadConfig();
+
+    return this.forceReconnect();
+  }
+
+  _configChanged = async () => {
+    Logger.server.info('RCON AuthConfig change detected, reconnecting to Server...');
+    this.forceReconnect();
+  }
+
+  async _loadConfig() {
     const authConfigDAO = new AuthConfigDAO();
     const configEntries = await authConfigDAO.getConfig();
 
     this._authConfig = AuthConfig.fromDAO(configEntries).config;
 
-    // TODO: Getting good to get rid of!
-    await ConfigParser.init();
-
-    this._cfgCommands = ConfigParser.config.commands;
-
-    this._serverWasDown = fs.existsSync(STATUS_SEMAPHORE_FILE);
-
-    return this.connect();
+    if (this._authConfig.discordWebhookURL.value) {
+      this._discordWH = new DiscordWebhook({
+        webhookUrl: this._authConfig.discordWebhookURL.value,
+        adminName: this._authConfig.discordAdminName && this._authConfig.discordAdminName.value
+      });
+    }
   }
 
   forceReconnect = async () => {
+    if (this._instance) {
+      this._instance.disconnect();
+    }
+
     this._connectionAttempts = 0;
     this._timeouts = 0;
-    this.connect();
+    this._serverWasDown = await fs.pathExists(STATUS_SEMAPHORE_FILE);
+    this._loadConfig();
+    return this.connect();
   }
 
   _detectDisconnection = async (err: Error) => {
@@ -68,7 +97,7 @@ export default class RCONClient {
     if (err.message.includes('read ECONNRESET')) {
       Logger.server.error('RCON Disconnect from Server');
 
-      if (this._connectionAttempts >= this._cfgCommands.maxConnectionAttempts) {
+      if (this._connectionAttempts >= Number(this._authConfig.maxConnectionAttempts.value)) {
         this._markServerStatus(false);
         return;
       }
@@ -91,7 +120,7 @@ export default class RCONClient {
       const { host, port, password } = this._authConfig;
 
       Logger.server.info(
-        `RCON Attempt connection (${this._connectionAttempts}/${this._cfgCommands.maxConnectionAttempts}) to ${
+        `RCON Attempt connection (${this._connectionAttempts}/${this._authConfig.maxConnectionAttempts.value}) to ${
           host.value
         }:${port.value}...`
       );
@@ -133,16 +162,17 @@ export default class RCONClient {
 
   markPossibleTimeout(err: Error, type: string) {
     let wasTimeout = false;
+    const maxPacketTimeouts = Number(this._authConfig.maxPacketTimeouts.value);
 
     if (true === err.message.includes('Response timeout for packet id')) {
       this._timeouts++;
       wasTimeout = true;
 
-      Logger.debug.warn(`Timeout when performing (${this._timeouts}/${this._cfgCommands.maxPacketTimeouts}): ${type}`);
+      Logger.debug.warn(`Timeout when performing (${this._timeouts}/${maxPacketTimeouts}): ${type}`);
     }
 
-    if (this._timeouts >= this._cfgCommands.maxPacketTimeouts) {
-      Logger.server.warn(`Maximum timeouts reached (${this._cfgCommands.maxPacketTimeouts}), forcing a reconnect...`);
+    if (this._timeouts >= maxPacketTimeouts) {
+      Logger.server.warn(`Maximum timeouts reached (${maxPacketTimeouts}), forcing a reconnect...`);
       this.forceReconnect();
     }
 
@@ -156,23 +186,29 @@ export default class RCONClient {
 
       if (false === instant) {
         Logger.server.error(
-          `RCON reached maximum connection retries (${this._cfgCommands.maxConnectionAttempts}), giving up.`
+          `RCON reached maximum connection retries (${this._authConfig.maxConnectionAttempts.value}), giving up.`
         );
       }
 
       if (false === this._serverWasDown) {
-        await DiscordWebhook.send(false);
+        if (this._discordWH) {
+          await this._discordWH.send(false);
+        }
       }
     } else {
       // Server is UP! However, only mark if previously down
       if (true === this._serverWasDown) {
         fs.removeSync(STATUS_SEMAPHORE_FILE);
-        await DiscordWebhook.send(true);
+        if (this._discordWH) {
+          await this._discordWH.send(true);
+        }
       }
 
       this._connectionAttempts = 0;
       this._timeouts = 0;
     }
+
+    this._messagingBus.emit(isUp ? EventMessages.RCON.Connected : EventMessages.RCON.Disconnected);
 
     this._serverWasDown = !isUp;
   }

@@ -3,8 +3,9 @@ import { Context } from 'koa';
 import Router from 'koa-router';
 import UserDAO from '../../../database/dao/UserDAO';
 import { JWT_SECRET } from '../middleware/Auth';
+import BaseRoute, { IRouteInitOptions } from './base';
 
-class AuthRoutes {
+class AuthRoutes extends BaseRoute {
   private _router!: Router;
   private _userDAO!: UserDAO;
 
@@ -12,7 +13,9 @@ class AuthRoutes {
     return this._router.routes();
   }
 
-  constructor() {
+  constructor(options: IRouteInitOptions) {
+    super(options);
+
     this._router = new Router();
     this._userDAO = new UserDAO();
 

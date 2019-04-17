@@ -1,5 +1,7 @@
-import ConfigParser from './util/ConfigParser';
 import wretch from 'wretch';
+import AuthConfigDAO from './database/dao/AuthConfigDAO';
+import AuthConfig, { IAuthConfig } from './database/models/AuthConfig';
+import ConfigParser from './util/ConfigParser';
 
 const COLOR_DOWN = 16711680;
 const COLOR_UP = 65280;
@@ -14,9 +16,21 @@ const INFO_TITLE_UP = 'Woo Hoo!';
 const INFO_DESC_DOWN = 'will get the server up as soon as possible!';
 const INFO_DESC_UP = 'Feel free to hop on and get to playing!';
 
+interface IDiscordWebhookInitOptions {
+  webhookUrl: string;
+  adminName?: string;
+}
+
 class DiscordWebhook {
+  private _options: IDiscordWebhookInitOptions;
+
+  constructor(options: IDiscordWebhookInitOptions) {
+    this._options = options;
+  }
+
   async send(isUp: boolean) {
-    const DiscordConfig = ConfigParser.config.discord;
+    const adminName = this._options.adminName || 'Your Admin';
+    const webhookURI = this._options.webhookUrl;
 
     const payload = {
       content: 'Ark Server Status Update...',
@@ -31,16 +45,16 @@ class DiscordWebhook {
         },
         {
           title: isUp ? INFO_TITLE_UP : INFO_TITLE_DOWN,
-          description: isUp ? INFO_DESC_UP : `${DiscordConfig.discordAdminName} ${INFO_DESC_DOWN}`
+          description: isUp ? INFO_DESC_UP : `${adminName} ${INFO_DESC_DOWN}`
         }
       ]
     };
 
-    return wretch(DiscordConfig.discordWebhookURL)
+    return wretch(webhookURI)
       .content('application/json')
       .post(payload)
       .res();
   }
 }
 
-export default new DiscordWebhook();
+export default DiscordWebhook;

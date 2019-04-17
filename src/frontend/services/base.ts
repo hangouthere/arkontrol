@@ -9,7 +9,7 @@ class BaseService {
     return BaseService.token ? jwtDecode(BaseService.token) : undefined;
   }
 
-  get _baseUrl() {
+  protected get _baseUrl() {
     //TODO: Convert to Config entry
     //TODO: Consider not recreating a `wretch` instance every time
     let api = wretch(`${window.location.origin}/api/v1/`);
@@ -25,6 +25,7 @@ class BaseService {
     // Load token on init
     BaseService.token = localStorage.getItem('_token');
 
+    // Eval if token is expired
     if (this.currentUser && this.currentUser.exp < new Date().getTime() / 1000) {
       BaseService.token = null;
       localStorage.removeItem('_token');
