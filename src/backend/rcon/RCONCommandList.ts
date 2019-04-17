@@ -1,4 +1,4 @@
-import { PromiseDelay } from '../../commonUtil';
+import { PromiseDelayCancellable } from '../../commonUtil';
 import ConfigParser from '../util/ConfigParser';
 import LoggerConfig from '../util/LoggerConfig';
 import RCONClient from './RCONClient';
@@ -9,6 +9,7 @@ export default class RCONCommandList {
   private _client: RCONClient;
   private _commandList!: Array<string>;
   private _currentCommand: string = '';
+  private _waitTimeout!: Function | undefined;
 
   constructor(client: RCONClient) {
     this._client = client;
@@ -21,9 +22,17 @@ export default class RCONCommandList {
     this._commandList = [...ConfigParser.commands.list];
 
     this._client.instance.onDidConnect(this._processCurrentCommand);
+    this._client.instance.onDidDisconnect(this._cancelAndStop);
 
     if (true === this._client.instance.authenticated) {
       this._processNextCommand();
+    }
+  }
+
+  _cancelAndStop = () => {
+    if (this._waitTimeout) {
+      this._waitTimeout();
+      this._waitTimeout = undefined;
     }
   }
 
@@ -53,7 +62,7 @@ export default class RCONCommandList {
 
       return this._processNextCommand();
     } catch (err) {
-      if ('Auth lost to server' === err) {
+      if (err.message.includes('Auth lost to server')) {
         return this._client.connect();
       }
 
@@ -72,14 +81,20 @@ export default class RCONCommandList {
     if (false === this._client.instance.authenticated) {
       const msg = '[CmdList] Auth lost to server';
       Logger.error(msg);
-      return Promise.reject(msg);
+      return Promise.reject(new Error(msg));
     }
 
     if (0 === currCommand.indexOf('wait')) {
       const [, delayStr] = currCommand.split(' ');
       const delay = parseInt(delayStr) || 1000;
 
-      await PromiseDelay(delay * 1000);
+      const [delayPromise, cancel] = PromiseDelayCancellable(delay * 1000);
+
+      this._waitTimeout = cancel as Function;
+      await delayPromise;
+      this._waitTimeout = undefined;
+
+      return 'Wait Completed';
     }
 
     const response = await this._client.instance.send(currCommand);

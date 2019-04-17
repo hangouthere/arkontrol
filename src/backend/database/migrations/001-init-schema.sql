@@ -17,12 +17,17 @@ CREATE TABLE Players (
 CREATE TABLE AuthConfig (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   propName TEXT NOT NULL UNIQUE,
-  propValue TEXT NOT NULL UNIQUE,
+  propValue TEXT NOT NULL,
   propDesc TEXT NOT NULL 
 );
 CREATE TABLE Commands (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   command TEXT NOT NULL
+);
+CREATE TABLE AppState (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  propName TEXT NOT NULL UNIQUE,
+  propValue TEXT NOT NULL
 );
 
 INSERT INTO Users (userName, roles, password)
@@ -50,9 +55,15 @@ VALUES
   ('broadcast <RichColor Color=\"0.95, 0.45, 0.2, 1\">Now go forth</>, and configure your Commands to run when you want!'),
   ('wait 30');
 
+INSERT INTO AppState (propName, propValue)
+VALUES 
+  ('serverWasDown', '0'),
+  ('currentCommandIndex', '0');
+
 -- Down
 
 DROP TABLE Users;
 DROP TABLE Players;
 DROP TABLE AuthConfig;
 DROP TABLE Commands;
+DROP TABLE AppState;

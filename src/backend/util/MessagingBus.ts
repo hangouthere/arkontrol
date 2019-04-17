@@ -1,10 +1,6 @@
 import { EventEmitter } from 'events';
 
 export const EventMessages = {
-  AuthConfig: {
-    Updated: 'authConfig::updated'
-  },
-
   RCON: {
     Connected: 'rcon::connected',
     Disconnected: 'rcon::disconnected'

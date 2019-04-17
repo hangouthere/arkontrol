@@ -2,9 +2,9 @@ import { Context } from 'koa';
 import Router from 'koa-router';
 import AuthConfigDAO from '../../../database/dao/AuthConfigDAO';
 import AuthConfig from '../../../database/models/AuthConfig';
+import { EventMessages } from '../../../util/MessagingBus';
 import { hasAnyRole, JTWVerify } from '../middleware/Auth';
 import BaseRoute, { IRouteInitOptions } from './base';
-import { EventMessages } from '../../../util/MessagingBus';
 
 class AdminRoutes extends BaseRoute {
   private _router!: Router;
@@ -25,7 +25,7 @@ class AdminRoutes extends BaseRoute {
   }
 
   getConfig = async (ctx: Context) => {
-    const configEntries = await this._authConfigDAO.getConfig();
+    const configEntries = await this._authConfigDAO.getConfigEntries();
     const config = AuthConfig.fromDAO(configEntries);
 
     ctx.body = config;
@@ -33,8 +33,6 @@ class AdminRoutes extends BaseRoute {
 
   saveConfigPart = async (ctx: Context) => {
     await this._authConfigDAO.saveConfigPart(ctx.request.body);
-
-    this._messagingBus.emit(EventMessages.AuthConfig.Updated);
 
     return this.getConfig(ctx);
   }

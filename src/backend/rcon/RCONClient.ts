@@ -7,6 +7,8 @@ import DiscordWebhook from '../DiscordWebhook';
 import ConfigParser from '../util/ConfigParser';
 import LoggerConfig, { LOG_PATH } from '../util/LoggerConfig';
 import MessagingBus, { EventMessages } from '../util/MessagingBus';
+import AppStateDAO from '../database/dao/AppStateDAO';
+import AppState, { IAppState } from '../database/models/AppState';
 
 const serverSemaphore = 'serverWasDown';
 const STATUS_SEMAPHORE_FILE = path.join(LOG_PATH, serverSemaphore);
@@ -27,6 +29,8 @@ export default class RCONClient {
   private _instance!: Rcon;
   private _connectionAttempts: number = 0;
   private _timeouts: number = 0;
+  private _appStateDao!: AppStateDAO;
+  private _appState!: IAppState;
   private _authConfig!: IAuthConfig;
   private _discordWH!: DiscordWebhook;
 
@@ -36,8 +40,6 @@ export default class RCONClient {
 
   constructor(options: IRconClientInitOptions) {
     this._messagingBus = options.messagingBus;
-
-    this._messagingBus.on(EventMessages.AuthConfig.Updated, this._configChanged);
   }
 
   async init() {
@@ -55,9 +57,13 @@ export default class RCONClient {
   }
 
   async _loadConfig() {
+    this._appStateDao = new AppStateDAO();
     const authConfigDAO = new AuthConfigDAO();
-    const configEntries = await authConfigDAO.getConfig();
 
+    const appStateEntries = await this._appStateDao.getStateEntries();
+    const configEntries = await authConfigDAO.getConfigEntries();
+
+    this._appState = AppState.fromDAO(appStateEntries).state;
     this._authConfig = AuthConfig.fromDAO(configEntries).config;
 
     if (this._authConfig.discordWebhookURL.value) {
@@ -73,10 +79,12 @@ export default class RCONClient {
       this._instance.disconnect();
     }
 
+    await this._loadConfig();
+
     this._connectionAttempts = 0;
     this._timeouts = 0;
-    this._serverWasDown = await fs.pathExists(STATUS_SEMAPHORE_FILE);
-    this._loadConfig();
+    this._serverWasDown = this._appState.serverWasDown;
+
     return this.connect();
   }
 
@@ -211,6 +219,10 @@ export default class RCONClient {
     this._messagingBus.emit(isUp ? EventMessages.RCON.Connected : EventMessages.RCON.Disconnected);
 
     this._serverWasDown = !isUp;
+    this._appStateDao.saveStatePart({
+      propName: 'serverWasDown',
+      propValue: isUp ? '0' : '1'
+    });
   }
 }
 

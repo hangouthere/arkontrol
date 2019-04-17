@@ -1,4 +1,4 @@
-import { FormGroup, Icon, InputGroup, Tooltip, Intent } from '@blueprintjs/core';
+import { FormGroup, Icon, InputGroup, Tooltip, Intent, Button } from '@blueprintjs/core';
 import React from 'react';
 import { IAuthConfig, IAuthConfigTuple, ILoadingParts } from '../../store/reducers/authConfig';
 
@@ -9,9 +9,12 @@ interface IProps {
   loadingParts: ILoadingParts;
   updateLoadingPart: (part: string, value?: string) => void;
   changeConfigPart: (event: React.ChangeEvent<HTMLFormElement>) => void;
+  sysCommand: (cmd: string) => void;
 }
 
 class AuthConfigPanel extends React.PureComponent<IProps> {
+  private _tabIndex = 0;
+
   _buildDescriptionToolTip(content: string) {
     const html = <div dangerouslySetInnerHTML={{ __html: content }} />;
 
@@ -58,6 +61,7 @@ class AuthConfigPanel extends React.PureComponent<IProps> {
           defaultValue={authConfigTuple.value}
           type={inputType}
           intent={loadingState}
+          tabIndex={++this._tabIndex}
           autoComplete="off"
         />
       </FormGroup>
@@ -81,6 +85,15 @@ class AuthConfigPanel extends React.PureComponent<IProps> {
 
         {this._createFormGroup('discordAdminName', 'Discord Admin Name')}
         {this._createFormGroup('discordWebhookURL', 'Discord WebHook URL')}
+
+        <div className="flex-display flex-center">
+          <Button
+            text="Reconnect ArKontrol"
+            icon="refresh"
+            alignText="left"
+            onClick={this.props.sysCommand.bind(null, 'reconnect')}
+          />
+        </div>
       </form>
     );
   }

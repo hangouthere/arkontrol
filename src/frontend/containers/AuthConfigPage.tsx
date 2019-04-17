@@ -6,6 +6,7 @@ import AuthConfigPanel from '../components/admin/AuthConfigPanel';
 import { AuthConfigActions, IAuthConfigEntry } from '../store/actions/authConfig';
 import { IRootState } from '../store/reducers';
 import { IAuthConfig, IAuthConfigState, ILoadingParts } from '../store/reducers/authConfig';
+import { AdminActions } from '../store/actions/admin';
 
 const DEBOUNCE_UPDATE_DURATION = 1500;
 
@@ -13,6 +14,7 @@ interface IProps {
   authConfigData: IAuthConfigState;
   getAuthConfig: typeof AuthConfigActions.getAuthConfig;
   saveAuthConfigPart: typeof AuthConfigActions.saveAuthConfigPart;
+  sysCommand: typeof AdminActions.sysCommand;
 }
 
 interface IState {
@@ -26,6 +28,10 @@ class AuthConfigPage extends React.PureComponent<IProps, IState> {
   }
 
   componentWillUnmount() {
+    if (!this.state.loadingParts) {
+      return;
+    }
+
     Object.entries(this.state.loadingParts).forEach(entry => {
       if (entry && entry[1]) {
         const timeoutSearch = entry[1].split('|');
@@ -86,6 +92,7 @@ class AuthConfigPage extends React.PureComponent<IProps, IState> {
         config={config}
         updateLoadingPart={this.updateLoadingPart}
         changeConfigPart={this.changeConfigPart}
+        sysCommand={this.props.sysCommand}
       />
     );
   }
@@ -108,7 +115,8 @@ const mapStateToProps = (state: IRootState) => ({
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
   getAuthConfig: () => dispatch(AuthConfigActions.getAuthConfig()),
-  saveAuthConfigPart: (input?: IAuthConfigEntry) => dispatch(AuthConfigActions.saveAuthConfigPart(input))
+  saveAuthConfigPart: (input?: IAuthConfigEntry) => dispatch(AuthConfigActions.saveAuthConfigPart(input)),
+  sysCommand: (command?: string) => dispatch(AdminActions.sysCommand(command))
 });
 
 export default connect(

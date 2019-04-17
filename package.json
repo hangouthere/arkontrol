@@ -21,7 +21,7 @@
     "build:prod": "concurrently -c black.bgCyan,cyan -n BackEnd,FrontEnd \"npm run build:prod:backend\" \"npm run build:prod:frontend\"",
     "build:prod:frontend": "cross-env NODE_ENV='production' webpack --display-modules --config ./.config/webpack.frontend.config.js",
     "build:prod:backend": "cross-env NODE_ENV='production' webpack --display-modules --config ./.config/webpack.backend.config.js",
-    "build:release": "pkg --out-dir ./_build ./_dist/backend/index.js",
+    "build:release": "npm run clean && npm run build:prod && pkg --out-dir ./_build ./_dist/backend/index.js",
     "clean": "rimraf ./_build ./_dist ./node_modules/.cache/babel-loader",
     "lint": "tslint .",
     "test": "echo \"Error: no test specified\" && exit 1"
