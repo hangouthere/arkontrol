@@ -10,9 +10,6 @@ import MessagingBus, { EventMessages } from '../util/MessagingBus';
 import AppStateDAO from '../database/dao/AppStateDAO';
 import AppState, { IAppState } from '../database/models/AppState';
 
-const serverSemaphore = 'serverWasDown';
-const STATUS_SEMAPHORE_FILE = path.join(LOG_PATH, serverSemaphore);
-
 const Logger = {
   debug: LoggerConfig.instance.getLogger(),
   server: LoggerConfig.instance.getLogger('server'),
@@ -92,7 +89,7 @@ export default class RCONClient {
 
     this._connectionAttempts = 0;
     this._timeouts = 0;
-    this._serverWasDown = this._appState.serverWasDown;
+    this._serverWasDown = '1' === this._appState.serverWasDown;
 
     return this.connect();
   }
@@ -195,8 +192,6 @@ export default class RCONClient {
   async _markServerStatus(isUp: boolean, instant: boolean = false) {
     // Mark as DOWN!
     if (false === isUp) {
-      fs.closeSync(fs.openSync(STATUS_SEMAPHORE_FILE, 'w'));
-
       if (false === instant) {
         Logger.server.error(
           `RCON reached maximum connection retries (${this._authConfig.maxConnectionAttempts.value}), giving up.`
@@ -211,7 +206,6 @@ export default class RCONClient {
     } else {
       // Server is UP! However, only mark if previously down
       if (true === this._serverWasDown) {
-        fs.removeSync(STATUS_SEMAPHORE_FILE);
         if (this._discordWH) {
           await this._discordWH.send(true);
         }

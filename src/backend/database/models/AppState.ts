@@ -4,7 +4,7 @@ export interface IAppStateEntry {
 }
 
 export interface IAppState {
-  serverWasDown: boolean;
+  serverWasDown: string;
   currentCommandIndex: number;
 }
 
