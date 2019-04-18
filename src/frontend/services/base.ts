@@ -10,9 +10,9 @@ class BaseService {
   }
 
   protected get _baseUrl() {
-    //TODO: Convert to Config entry
-    //TODO: Consider not recreating a `wretch` instance every time
-    let api = wretch(`${window.location.origin}/api/v1/`);
+    const baseUri = (window as any).ARKONTROL_URI;
+
+    let api = wretch(`${baseUri}/api/v1/`);
 
     if (BaseService.token) {
       api = api.auth(`Bearer ${BaseService.token}`);

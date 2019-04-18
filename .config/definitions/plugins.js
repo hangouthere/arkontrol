@@ -33,15 +33,9 @@ const CopyDBMigrations = new CopyPlugin([
  */
 const DefineConstants = new webpack.DefinePlugin({
   'process.env': {
-    INIT_URI: JSON.stringify(
-      // Build URI to init the UI from
-      isHot ? `http://localhost:${WDSPort}` : `file://${path.resolve(FrontendOutputInfo.Path, 'index.html')}`
-    ),
     HOT: JSON.stringify(isHot),
-    SERVER_PORT: JSON.stringify(ServerPort),
-    WDS_PORT: JSON.stringify(WDSPort)
-  },
-  SOCKET_URI: isHot ? JSON.stringify(`localhost:${ServerPort}`) : 'location.host'
+    SERVER_PORT: JSON.stringify(ServerPort)
+  }
 });
 
 /**

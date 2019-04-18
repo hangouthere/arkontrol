@@ -32,6 +32,7 @@ export default class SocketMessageProxy {
 
   init() {
     this._messagingBus.on(EventMessages.Socket.Message, this._consumeMessage);
+    this._messagingBus.on(EventMessages.RCON.ConnectionChange, this._updateStatus);
   }
 
   _updateStatus = (isConnected: boolean) => {

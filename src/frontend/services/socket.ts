@@ -1,9 +1,6 @@
 import ReduxStore from '../store';
 import { RemoteStatusActions } from '../store/actions/remoteStatus';
 
-// Declared here, but injected via WebPack.DefinePlugin
-declare var SOCKET_URI: string;
-
 class SocketService {
   private _ws!: WebSocket;
 
@@ -15,20 +12,28 @@ class SocketService {
     this._connect();
   }
 
-  _connect() {
+  _connect = () => {
+    const websocketUri = (window as any).WEBSOCKET_URI;
+
     if (this._ws) {
       this._ws.removeEventListener('message', this._socketMessageRecieved);
       this._ws.removeEventListener('close', this._socketDisconnected);
     }
 
+    if (!websocketUri) {
+      return setTimeout(this._connect, 1000);
+    }
+
     try {
-      this._ws = new WebSocket(`ws://${SOCKET_URI}`);
+      this._ws = new WebSocket(`ws://${websocketUri}`);
       this._ws.addEventListener('open', this._socketConnected);
       this._ws.addEventListener('message', this._socketMessageRecieved);
       this._ws.addEventListener('close', this._socketDisconnected);
     } catch (err) {
       //
     }
+
+    return undefined;
   }
 
   _socketConnected = (_event: Event) => {
