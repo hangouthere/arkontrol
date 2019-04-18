@@ -1,3 +1,6 @@
+import ReduxStore from '../store';
+import { RemoteStatusActions } from '../store/actions/remoteStatus';
+
 // Declared here, but injected via WebPack.DefinePlugin
 declare var SOCKET_URI: string;
 
@@ -9,17 +12,48 @@ class SocketService {
   }
 
   constructor() {
-    this._ws = new WebSocket(`ws://${SOCKET_URI}`);
-    // this._ws.addEventListener('message', this._socketMessageRecieved.bind(this));
+    this._connect();
   }
 
-  // TODO: Add internal message recieiving
-  //   - updating player list ondemand instead of timed
-  //   - status of RCON connectivity, system status
+  _connect() {
+    if (this._ws) {
+      this._ws.removeEventListener('message', this._socketMessageRecieved);
+      this._ws.removeEventListener('close', this._socketDisconnected);
+    }
 
-  // _socketMessageRecieved(event: MessageEvent) {
-  //   this.emit(MESSAGE_RECIEVED, event.data);
-  // }
+    try {
+      this._ws = new WebSocket(`ws://${SOCKET_URI}`);
+      this._ws.addEventListener('open', this._socketConnected);
+      this._ws.addEventListener('message', this._socketMessageRecieved);
+      this._ws.addEventListener('close', this._socketDisconnected);
+    } catch (err) {
+      //
+    }
+  }
+
+  _socketConnected = (_event: Event) => {
+    ReduxStore.store.dispatch(RemoteStatusActions.setBotStatus(true));
+
+    setTimeout(() => {
+      // Kick off getting status
+      ReduxStore.store.dispatch(RemoteStatusActions.getServerStatus());
+    }, 1000);
+  }
+
+  _socketMessageRecieved = (event: MessageEvent) => {
+    try {
+      ReduxStore.store.dispatch(JSON.parse(event.data));
+    } catch (err) {
+      console.log(`WS Unknown Message Recieved: ${event.data}`);
+    }
+  }
+
+  _socketDisconnected = (_event: CloseEvent) => {
+    ReduxStore.store.dispatch(RemoteStatusActions.setBotStatus(false));
+    ReduxStore.store.dispatch(RemoteStatusActions.setServerStatus(false));
+
+    this._connect();
+  }
 
   async sendArkCommand(msg: string) {
     return await this._ws.send(`arkCommand::${msg}`);

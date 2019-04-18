@@ -38,8 +38,6 @@ const Navigation: React.FC<IProps> = props => {
   );
 };
 
-const mapStateToProps = (state: IRootState) => ({
-  ...state.Auth
-});
+const mapStateToProps = (state: IRootState) => state.Auth;
 
 export default connect(mapStateToProps)(Navigation);

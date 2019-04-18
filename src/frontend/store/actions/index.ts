@@ -1,3 +1,4 @@
+
 export interface IAction<IPayload> {
   readonly type: string;
   readonly payload?: IPayload;

@@ -89,7 +89,12 @@ export default class RCONClient {
   }
 
   _detectDisconnection = async (err: Error) => {
-    if (err.message.includes('connect ECONNREFUSED') || err.message.includes('connect ETIMEDOUT')) {
+    const badEndpoint =
+      err.message.includes('getaddrinfo ENOTFOUND') ||
+      err.message.includes('connect ECONNREFUSED') ||
+      err.message.includes('connect ETIMEDOUT');
+
+    if (badEndpoint) {
       Logger.server.error(
         'RCON Could not connect to specified host/port combination.\n' +
           'Please make sure:\n' +
@@ -216,7 +221,7 @@ export default class RCONClient {
       this._timeouts = 0;
     }
 
-    this._messagingBus.emit(isUp ? EventMessages.RCON.Connected : EventMessages.RCON.Disconnected);
+    this._messagingBus.emit(EventMessages.RCON.ConnectionChange, isUp);
 
     this._serverWasDown = !isUp;
     this._appStateDao.saveStatePart({
@@ -232,6 +237,7 @@ process.on('unhandledRejection', (error: any) => {
 
 process.on('uncaughtException', (err: any) => {
   const knownError =
+    err.message.includes('getaddrinfo ENOTFOUND') ||
     err.message.includes('connect ECONNREFUSED') ||
     err.message.includes('connect ETIMEDOUT') ||
     err.message.includes('read ECONNRESET');

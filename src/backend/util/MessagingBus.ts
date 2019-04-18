@@ -2,12 +2,11 @@ import { EventEmitter } from 'events';
 
 export const EventMessages = {
   RCON: {
-    Connected: 'rcon::connected',
-    Disconnected: 'rcon::disconnected'
+    ConnectionChange: 'rcon::SET_SERVER_STATUS'
   },
 
   Socket: {
-    Connected: 'socket::connected',
+    Connected: 'socket::SET_BOT_STATUS',
     Message: 'socket::messageRecieved'
   }
 };

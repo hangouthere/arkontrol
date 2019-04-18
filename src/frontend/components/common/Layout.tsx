@@ -1,5 +1,6 @@
 import React from 'react';
-import Navigation from '../containers/common/Navigation';
+import FooterContainer from '../../containers/common/FooterContainer';
+import Navigation from '../../containers/common/Navigation';
 
 const Layout: React.FC = props => {
   return (
@@ -7,6 +8,8 @@ const Layout: React.FC = props => {
       <Navigation />
 
       <section id="Content">{props.children}</section>
+
+      <FooterContainer />
     </div>
   );
 };

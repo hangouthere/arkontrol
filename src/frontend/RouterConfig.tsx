@@ -1,7 +1,7 @@
 import React from 'react';
 import { Route, RouteComponentProps, Switch } from 'react-router';
-import FourOhFour from './components/FourOhFour';
-import Layout from './components/Layout';
+import FourOhFour from './components/common/FourOhFour';
+import Layout from './components/common/Layout';
 import AdminPage from './containers/AdminPage';
 import AuthConfigPage from './containers/AuthConfigPage';
 import LoginPage from './containers/LoginPage';

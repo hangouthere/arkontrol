@@ -2,7 +2,6 @@ import { Context } from 'koa';
 import Router from 'koa-router';
 import AuthConfigDAO from '../../../database/dao/AuthConfigDAO';
 import AuthConfig from '../../../database/models/AuthConfig';
-import { EventMessages } from '../../../util/MessagingBus';
 import { hasAnyRole, JTWVerify } from '../middleware/Auth';
 import BaseRoute, { IRouteInitOptions } from './base';
 

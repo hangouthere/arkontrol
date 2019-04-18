@@ -15,66 +15,6 @@ body {
   padding: 20px;
 }
 
-#root {
-  max-width: 1024px;
-  margin: 0 auto;
-
-  display: flex;
-  flex: 1;
-}
-
-.navbar-heading {
-  font-family: 'Ark';
-  font-size: 20px;
-}
-
-#Layout {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  border: 2px solid rgba(0, 238, 255, 0.3);
-}
-
-#Content {
-  background: linear-gradient(
-    to bottom,
-    rgba(29, 48, 54, 0.8) 0%,
-    rgba(59, 87, 99, 0.8) 18%,
-    rgba(18, 30, 34, 0.9) 88%
-  );
-
-  flex: 1;
-  padding: 10px;
-  margin-top: -15px;
-  height: 100%;
-  overflow-y: auto;
-
-  h1 {
-    font-family: 'Ark';
-    text-transform: uppercase;
-    border-bottom: 2px solid rgba($white, 0.3);
-  }
-}
-
-#FourOhFour {
-  p {
-    font-size: 32px;
-    width: 350px;
-    margin: 70px auto 0 auto;
-  }
-}
-
-.normalTextGroup,
-.longerTextGroup {
-  display: inline-block;
-  width: 250px;
-  margin-right: 15px;
-}
-
-.longerTextGroup {
-  width: 500px;
-}
-
 .flex {
   &-display {
     display: flex;
@@ -107,6 +47,74 @@ body {
   &-horizontal {
     & > *:not(:last-child) {
       margin-right: 10px;
+    }
+  }
+}
+
+#FourOhFour {
+  p {
+    font-size: 32px;
+    width: 350px;
+    margin: 70px auto 0 auto;
+  }
+}
+
+#root {
+  max-width: 1024px;
+  margin: 0 auto;
+
+  display: flex;
+  flex: 1;
+
+  #Layout {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    border: 2px solid rgba(0, 238, 255, 0.3);
+
+    .navbar-heading {
+      font-family: 'Ark';
+      font-size: 20px;
+    }
+  }
+
+  #Content {
+    background: linear-gradient(
+      to bottom,
+      rgba(29, 48, 54, 0.8) 0%,
+      rgba(59, 87, 99, 0.8) 18%,
+      rgba(18, 30, 34, 0.9) 88%
+    );
+
+    flex: 1;
+    padding: 10px;
+    margin-top: -15px;
+    height: 100%;
+    overflow-y: auto;
+
+    h1 {
+      font-family: 'Ark';
+      text-transform: uppercase;
+      border-bottom: 2px solid rgba($white, 0.3);
+    }
+  }
+
+  #StatusFooter {
+    padding: 5px 10px;
+
+    background: linear-gradient(
+      to bottom,
+      rgba(103, 151, 172, 0.8) 0%,
+      rgba(29, 43, 49, 0.8) 50%,
+      rgba(70, 103, 117, 0.8) 80%,
+      rgba(27, 27, 27, 1) 100%
+    );
+
+    .bot,
+    .server {
+      color: white;
+      width: 120px;
+      text-align: right;
     }
   }
 }

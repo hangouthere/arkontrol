@@ -5,7 +5,10 @@ import WebSocketServer from './servers/WebSocketServer';
 import LoggerConfig from './util/LoggerConfig';
 import MessagingBus, { EventMessages } from './util/MessagingBus';
 
-const Logger = LoggerConfig.instance.getLogger('commands');
+const Logger = {
+  server: LoggerConfig.instance.getLogger('server'),
+  commands: LoggerConfig.instance.getLogger('commands')
+};
 
 const ID_ARK_COMMAND = 'arkCommand::';
 const ID_SYS_COMMAND = 'sysCommand::';
@@ -28,15 +31,23 @@ export default class SocketMessageProxy {
   }
 
   init() {
-    this._messagingBus.on(EventMessages.Socket.Connected, this.addConnection);
-    this._messagingBus.on(EventMessages.Socket.Message, this.consumeMessage);
+    this._messagingBus.on(EventMessages.Socket.Message, this._consumeMessage);
   }
 
-  addConnection(socket: WebSocket) {
-    socket.send('You have connected!');
+  _updateStatus = (isConnected: boolean) => {
+    Logger.server.info(`Alerting clients of Status Change: ${isConnected}`);
+
+    this._webSocketServer.instance.clients.forEach(client => {
+      client.send(
+        JSON.stringify({
+          type: EventMessages.RCON.ConnectionChange,
+          payload: isConnected
+        })
+      );
+    });
   }
 
-  consumeMessage = (data: WebSocket.Data, _socket: WebSocket) => {
+  _consumeMessage = (data: WebSocket.Data, _socket: WebSocket) => {
     const message = data as string;
 
     if (0 === message.indexOf(ID_ARK_COMMAND)) {
@@ -47,13 +58,13 @@ export default class SocketMessageProxy {
       return this._proxySysCommand(message.replace(ID_SYS_COMMAND, ''));
     }
 
-    Logger.warn(`[UICmd] Unsupported Message Recieved: "${message}"`);
+    Logger.commands.warn(`[UICmd] Unsupported Message Recieved: "${message}"`);
 
     return Promise.resolve();
   }
 
   async _proxyRCONCommand(command: string) {
-    Logger.info(`[UIArkCmd] Exec: ${command}`);
+    Logger.commands.info(`[UIArkCmd] Exec: ${command}`);
 
     try {
       await this._rconClient.instance.send(command);
@@ -63,7 +74,7 @@ export default class SocketMessageProxy {
   }
 
   async _proxySysCommand(command: string) {
-    Logger.info(`[UISysCmd] Exec: ${command}`);
+    Logger.commands.info(`[UISysCmd] Exec: ${command}`);
 
     switch (command) {
       case 'reconnect':
