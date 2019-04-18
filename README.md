@@ -57,6 +57,7 @@ Upon installation, `npm run build:dev:frontend_dll` is automatically ran to spee
 | `npm run build:prod`             | Builds all parts of the project for Production.               |
 | `npm run build:prod:frontend`    | Builds only the FrontEnd bundle for Production.               |
 | `npm run build:prod:backend`     | Builds only the BackEnd bundle for Production.                |
+| `npm run build:release`          | Builds only the BackEnd bundle for Release (exe, etc).        |
 | `npm run dev`                    | Starts Node and `webpack-dev-server` for Development.         |
 | `npm start`                      | Starts up the built project in the `_dist` output folder.     |
 
@@ -70,7 +71,6 @@ Boolean values are meant to be set to `1` or `true`
 | `FORCE_BUILD_DLL`  | `bool`; Forces the build of `frontend_dll` should files already exist. Useful for when you change your core dependencies.                                         |
 | `SHOW_CONFIG_ONLY` | `bool`; Shows the entire WebPack configuration and exits without compiling.                                                                                       |
 | `HOT`              | `bool`; Enables Hot Module Reloading, `webpack-dev-server`, and `react-hot-load` for development. Using this, you do not need to compiled the `frontend` targets. |
-| `WDSPORT`          | `number`; Defines the port to run `webpack-dev-server` on. Defaults to `8080`                                                                                     |
 | `SERVER_PORT`      | `number`; Defines the port to run the `node` server on. Defaults to `8080`, unless `HOT=1` which sets it to `3000`.                                               |
 
 ## Development Workflow

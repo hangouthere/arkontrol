@@ -63,7 +63,7 @@ export default class RCONCommandList {
       return this._processNextCommand();
     } catch (err) {
       if (err.message.includes('Auth lost to server')) {
-        return this._client.connect();
+        return undefined;
       }
 
       // Check for timeout
@@ -79,8 +79,7 @@ export default class RCONCommandList {
 
   async _execCurrentCommand(currCommand: string): Promise<string> {
     if (false === this._client.instance.authenticated) {
-      const msg = '[CmdList] Auth lost to server';
-      Logger.error(msg);
+      const msg = 'Auth lost to server';
       return Promise.reject(new Error(msg));
     }
 

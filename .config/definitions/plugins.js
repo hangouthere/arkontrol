@@ -28,6 +28,17 @@ const CopyDBMigrations = new CopyPlugin([
 ]);
 
 /**
+ * Copy default Connections file to dist output for runtime startup
+ */
+const CopyConnectionsFile = new CopyPlugin([
+  // Copy connections file
+  {
+    from: path.resolve(RootDir, 'src', FrontendOutputInfo.MainName, 'connections.json'),
+    to: path.join('connections.json')
+  }
+]);
+
+/**
  * Define constants via `DefinePlugin`.
  * Primarilly to populate `process.env`.
  */
@@ -101,6 +112,7 @@ const TSTypeChecker = new ForkTsCheckerWebpackPlugin({
 });
 
 module.exports = {
+  CopyConnectionsFile,
   CopyDBMigrations,
   DefineConstants,
   DLL,

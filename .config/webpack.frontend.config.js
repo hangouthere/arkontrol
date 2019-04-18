@@ -25,7 +25,7 @@ const config = merge.smart(
       path: path.join(RootDir, DistDir, OutputInfo.Path),
       filename: path.posix.join(OutputInfo.Scripts, `${OutputInfo.MainName}.js`)
     },
-    plugins: [Plugins.WebPackHTML]
+    plugins: [Plugins.WebPackHTML, Plugins.CopyConnectionsFile]
   },
   // Add Dev Server config
   DevServer,

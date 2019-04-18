@@ -14,31 +14,34 @@ const Logger = {
 
 export default class RCONStatus {
   private _client: RCONClient;
-  private _interval: Array<number> = [];
+  private _interval: Array<NodeJS.Timeout> = [];
   private _dao!: PlayersDAO;
 
   constructor(client: RCONClient) {
     this._client = client;
-  }
-
-  async init() {
     this._dao = new PlayersDAO();
 
     this._client.instance.onDidConnect(this._startIntervals);
+    this._client.instance.onDidDisconnect(this._stopIntervals);
+  }
 
-    this._client.instance.onDidDisconnect(() => {
-      this._interval.forEach(i => clearInterval(i));
-      this._interval = [];
-    });
-
+  async init() {
     if (true === this._client.instance.authenticated) {
       this._startIntervals();
     }
   }
 
+  _stopIntervals = () => {
+    this._interval.forEach(i => clearInterval(i));
+    this._interval = [];
+  }
+
   _startIntervals = () => {
-    setInterval(this.getChat, CHAT_BUFFER_FREQ);
-    setInterval(this.getUsers, USER_LIST_UPDATE_FREQ);
+    this._stopIntervals();
+    const int1 = setInterval(this.getChat, CHAT_BUFFER_FREQ);
+    const int2 = setInterval(this.getUsers, USER_LIST_UPDATE_FREQ);
+
+    this._interval.push(int1, int2);
   }
 
   getChat = async () => {

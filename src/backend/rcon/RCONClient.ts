@@ -40,6 +40,15 @@ export default class RCONClient {
 
   constructor(options: IRconClientInitOptions) {
     this._messagingBus = options.messagingBus;
+
+    this._instance = new Rcon({
+      packetResponseTimeout: 5000
+    });
+
+    this._instance.onDidDisconnect(() => {
+      Logger.server.warn('RCON Server disconnected, trying to reconnect...');
+      this.connect();
+    });
   }
 
   async init() {
@@ -138,10 +147,6 @@ export default class RCONClient {
         }:${port.value}...`
       );
 
-      this._instance = new Rcon({
-        packetResponseTimeout: 5000
-      });
-
       await this._instance.connect({
         host: host.value,
         port: Number(port.value),
@@ -151,11 +156,6 @@ export default class RCONClient {
       this._markServerStatus(true);
 
       Logger.server.info('RCON Server successfully connected!');
-
-      this._instance.onDidDisconnect(() => {
-        Logger.server.warn('RCON Server disconnected, trying to reconnect...');
-        this.connect();
-      });
     } catch (err) {
       if ('Authentication failed: wrong password' === err.message) {
         Logger.server.error('Supplied RCON Password is invalid, please check your configuration!');
