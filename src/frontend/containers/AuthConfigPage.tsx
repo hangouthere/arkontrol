@@ -3,10 +3,11 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Dispatch } from 'redux';
 import AuthConfigPanel from '../components/admin/AuthConfigPanel';
+import { ShowToaster } from '../services/toaster';
+import { AdminActions } from '../store/actions/admin';
 import { AuthConfigActions, IAuthConfigEntry } from '../store/actions/authConfig';
 import { IRootState } from '../store/reducers';
 import { IAuthConfig, IAuthConfigState, ILoadingParts } from '../store/reducers/authConfig';
-import { AdminActions } from '../store/actions/admin';
 
 const DEBOUNCE_UPDATE_DURATION = 1500;
 
@@ -76,6 +77,10 @@ class AuthConfigPage extends React.PureComponent<IProps, IState> {
       });
 
       this.updateLoadingPart(name, 'completed|');
+      ShowToaster({
+        message: 'AuthConfig Updated',
+        intent: 'success'
+      });
     }, DEBOUNCE_UPDATE_DURATION);
 
     this.updateLoadingPart(name, `changing|${updatePropTimeout}`);

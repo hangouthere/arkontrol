@@ -2,6 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Redirect, RouteComponentProps } from 'react-router';
 import { Dispatch } from 'redux';
+import { ShowToaster } from '../services/toaster';
 import { AuthActions } from '../store/actions/auth';
 
 interface IProps extends RouteComponentProps {
@@ -13,6 +14,11 @@ interface IProps extends RouteComponentProps {
 const Logout: React.FC<IProps> = props => {
   props.logout();
   props.setRedirect('/');
+
+  ShowToaster({
+    message: 'Logout Successful',
+    intent: 'success'
+  });
 
   return <Redirect to="/" />;
 };

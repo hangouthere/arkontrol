@@ -1,8 +1,10 @@
 import ReduxStore from '../store';
 import { RemoteStatusActions } from '../store/actions/remoteStatus';
+import { ShowToaster } from './toaster';
 
 class SocketService {
   private _ws!: WebSocket;
+  private _hasBeenWarned = false;
 
   get socket() {
     return this._ws;
@@ -37,7 +39,13 @@ class SocketService {
   }
 
   _socketConnected = (_event: Event) => {
+    this._hasBeenWarned = false;
     ReduxStore.store.dispatch(RemoteStatusActions.setBotStatus(true));
+
+    ShowToaster({
+      message: 'Connected to Bot!',
+      intent: 'success'
+    });
 
     setTimeout(() => {
       // Kick off getting status
@@ -57,15 +65,33 @@ class SocketService {
     ReduxStore.store.dispatch(RemoteStatusActions.setBotStatus(false));
     ReduxStore.store.dispatch(RemoteStatusActions.setServerStatus(false));
 
+    if (false === this._hasBeenWarned) {
+      this._hasBeenWarned = true;
+      ShowToaster({
+        message: 'Connection to Bot lost... Reconnecting',
+        intent: 'warning'
+      });
+    }
+
     this._connect();
   }
 
   async sendArkCommand(msg: string) {
-    return await this._ws.send(`arkCommand::${msg}`);
+    await this._ws.send(`arkCommand::${msg}`);
+
+    ShowToaster({
+      message: 'Ark Command Sent',
+      intent: 'success'
+    });
   }
 
   async sendSysCommand(msg: string) {
-    return await this._ws.send(`sysCommand::${msg}`);
+    await this._ws.send(`sysCommand::${msg}`);
+
+    ShowToaster({
+      message: 'System Command Sent',
+      intent: 'success'
+    });
   }
 }
 

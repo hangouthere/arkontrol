@@ -7,6 +7,7 @@ import { IAuthRequest } from '../services/auth';
 import { AuthActions } from '../store/actions/auth';
 import { IRootState } from '../store/reducers';
 import { IAuthState } from '../store/reducers/auth';
+import { ShowToaster } from '../services/toaster';
 
 interface IProps extends RouteComponentProps {
   auth: IAuthState;
@@ -27,6 +28,11 @@ class LoginPage extends React.PureComponent<IProps, IAuthRequest> {
       const { redirectAfterAuth } = this.props.auth;
 
       await this.props.login(this.state);
+
+      ShowToaster({
+        message: 'Login Successful',
+        intent: 'success'
+      });
 
       this.props.setRedirect('/');
       this.props.history.replace(redirectAfterAuth);

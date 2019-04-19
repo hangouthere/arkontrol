@@ -44,7 +44,7 @@ VALUES
   ('port', '27015', 'Port that your Ark Server RCON has exposed.'),
   ('password', 'adminPassword', 'Password for your RCON authentication.'),
   ('maxConnectionAttempts', '10', 'The number of times you want to retry connecting to the Server before giving up.'),
-  ('maxPacketTimeouts', '5', 'The number of times you want to allow timed out commands.<br />System auto-reconnects when limit reached.'),
+  ('maxPacketTimeouts', '5', 'The number of times to fail (TTF) for commands.<br />System auto-reconnects when limit reached.'),
   ('discordWebhookURL', '', 'The Discord WebHook URL to post the Server Status.<br />Leave blank to disable Discord Webhook integration.'),
   ('discordAdminName', 'Your Server Admin', 'The Discord user responsible for the Server availability.');
 

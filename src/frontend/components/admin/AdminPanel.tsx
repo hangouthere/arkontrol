@@ -47,7 +47,7 @@ const AdminPanel: React.FC<IProps> = props => (
           <Button text="Dawn" onClick={props.commands.admin.bind(null, 'SetTimeOfDay 03:00')} />
           <Button text="Noon" onClick={props.commands.admin.bind(null, 'SetTimeOfDay 12:00')} />
           <Button text="Dusk" onClick={props.commands.admin.bind(null, 'SetTimeOfDay 20:00')} />
-          <Button text="Dark" onClick={props.commands.admin.bind(null, 'SetTimeOfDay 23:00')} />
+          <Button text="Nite" onClick={props.commands.admin.bind(null, 'SetTimeOfDay 23:00')} />
         </div>
       </div>
 

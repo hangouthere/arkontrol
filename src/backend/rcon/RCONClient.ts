@@ -39,12 +39,14 @@ export default class RCONClient {
     this._messagingBus = options.messagingBus;
 
     this._instance = new Rcon({
-      packetResponseTimeout: 5000
+      packetResponseTimeout: 10000
     });
 
     this._instance.onDidDisconnect(() => {
-      Logger.server.warn('RCON Server disconnected, trying to reconnect...');
-      this.connect();
+      if (false === this._reachedMaxAttempts) {
+        Logger.server.warn('RCON Server disconnected, trying to reconnect...');
+        this.connect();
+      }
     });
   }
 
@@ -60,6 +62,10 @@ export default class RCONClient {
   _configChanged = async () => {
     Logger.server.info('RCON AuthConfig change detected, reconnecting to Server...');
     this.forceReconnect();
+  }
+
+  get _reachedMaxAttempts() {
+    return this._connectionAttempts >= Number(this._authConfig.maxConnectionAttempts.value);
   }
 
   async _loadConfig() {
@@ -116,7 +122,7 @@ export default class RCONClient {
     if (err.message.includes('read ECONNRESET')) {
       Logger.server.error('RCON Disconnect from Server');
 
-      if (this._connectionAttempts >= Number(this._authConfig.maxConnectionAttempts.value)) {
+      if (true === this._reachedMaxAttempts) {
         this._markServerStatus(false);
         return;
       }
@@ -203,6 +209,8 @@ export default class RCONClient {
           await this._discordWH.send(false);
         }
       }
+
+      this._connectionAttempts = Number(this._authConfig.maxConnectionAttempts.value);
     } else {
       // Server is UP! However, only mark if previously down
       if (true === this._serverWasDown) {
