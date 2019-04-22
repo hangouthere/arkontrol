@@ -1,14 +1,10 @@
-import fs from 'fs-extra';
-import path from 'path';
 import { Rcon } from 'rcon-client';
-import AuthConfigDAO from '../database/dao/AuthConfigDAO';
-import AuthConfig, { IAuthConfig } from '../database/models/AuthConfig';
+import { debounce } from '../../commonUtil';
 import DiscordWebhook from '../DiscordWebhook';
 import ConfigParser from '../util/ConfigParser';
-import LoggerConfig, { LOG_PATH } from '../util/LoggerConfig';
+import LoggerConfig from '../util/LoggerConfig';
 import MessagingBus, { EventMessages } from '../util/MessagingBus';
-import AppStateDAO from '../database/dao/AppStateDAO';
-import AppState, { IAppState } from '../database/models/AppState';
+import RCONConfig from './RCONConfig';
 
 const Logger = {
   debug: LoggerConfig.instance.getLogger(),
@@ -22,85 +18,76 @@ interface IRconClientInitOptions {
 
 export default class RCONClient {
   private _messagingBus: MessagingBus;
+  private _config: RCONConfig;
   private _serverWasDown!: boolean;
   private _instance!: Rcon;
   private _connectionAttempts: number = 0;
   private _timeouts: number = 0;
-  private _appStateDao!: AppStateDAO;
-  private _appState!: IAppState;
-  private _authConfig!: IAuthConfig;
   private _discordWH!: DiscordWebhook;
+  private _onDidDisconnectDebounce: () => void;
 
   get instance() {
     return this._instance;
   }
 
+  get isAuthenticated() {
+    return this.instance.authenticated;
+  }
+
+  private get _reachedMaxAttempts() {
+    return this._connectionAttempts >= Number(this._config.authConfig.maxConnectionAttempts.value);
+  }
+
   constructor(options: IRconClientInitOptions) {
+    // rcon-client throws an uncaught exception for some reason... Catch here and handle it!
+    process.on('uncaughtException', this._detectUndesiredDisconnection);
+
     this._messagingBus = options.messagingBus;
+    this._config = new RCONConfig();
+
+    this._onDidDisconnectDebounce = debounce(this._onDidDisconnect, 1000);
 
     this._instance = new Rcon({
       packetResponseTimeout: 10000
     });
 
-    this._instance.onDidDisconnect(() => {
-      if (false === this._reachedMaxAttempts) {
-        Logger.server.warn('RCON Server disconnected, trying to reconnect...');
-        this.connect();
+    this._instance.onDidDisconnect(this._onDidDisconnectDebounce);
+  }
+
+  private _onDidDisconnect = () => {
+    if (false === this._reachedMaxAttempts) {
+      Logger.server.warn('RCON Server disconnected, trying to reconnect...');
+      this.connect();
+    }
+  }
+
+  private async _markServerStatus(isUp: boolean, instant: boolean = false) {
+    const maxConnAttempts = Number(this._config.authConfig.maxConnectionAttempts.value);
+
+    // Mark as DOWN!
+    if (false === isUp) {
+      if (false === instant) {
+        Logger.server.error(`RCON reached maximum connection retries (${maxConnAttempts}), giving up.`);
       }
-    });
-  }
 
-  async init() {
-    // TODO: Get rid of this!
-    await ConfigParser.init();
-
-    await this._loadConfig();
-
-    return this.forceReconnect();
-  }
-
-  _configChanged = async () => {
-    Logger.server.info('RCON AuthConfig change detected, reconnecting to Server...');
-    this.forceReconnect();
-  }
-
-  get _reachedMaxAttempts() {
-    return this._connectionAttempts >= Number(this._authConfig.maxConnectionAttempts.value);
-  }
-
-  async _loadConfig() {
-    this._appStateDao = new AppStateDAO();
-    const authConfigDAO = new AuthConfigDAO();
-
-    const appStateEntries = await this._appStateDao.getStateEntries();
-    const configEntries = await authConfigDAO.getConfigEntries();
-
-    this._appState = AppState.fromDAO(appStateEntries).state;
-    this._authConfig = AuthConfig.fromDAO(configEntries).config;
-
-    if (this._authConfig.discordWebhookURL.value) {
-      this._discordWH = new DiscordWebhook({
-        webhookUrl: this._authConfig.discordWebhookURL.value,
-        adminName: this._authConfig.discordAdminName && this._authConfig.discordAdminName.value
-      });
-    }
-  }
-
-  forceReconnect = async () => {
-    if (this._instance) {
-      this._instance.disconnect();
+      this._connectionAttempts = maxConnAttempts;
+    } else {
+      this._connectionAttempts = 0;
+      this._timeouts = 0;
     }
 
-    await this._loadConfig();
+    this._messagingBus.emit(EventMessages.RCON.ConnectionChange, isUp);
 
-    this._connectionAttempts = 0;
-    this._timeouts = 0;
-    this._serverWasDown = '1' === this._appState.serverWasDown;
+    // Server status changed, alert Discord!
+    if (isUp === this._serverWasDown && this._discordWH) {
+      await this._discordWH.send(isUp);
+    }
 
-    return this.connect();
+    this._serverWasDown = !isUp;
+    this._config.saveServerStatus(isUp);
   }
 
-  _detectDisconnection = async (err: Error) => {
+  private _detectUndesiredDisconnection = async (err: Error) => {
     const badEndpoint =
       err.message.includes('getaddrinfo ENOTFOUND') ||
       err.message.includes('connect ECONNREFUSED') ||
@@ -134,27 +121,45 @@ export default class RCONClient {
     return;
   }
 
-  async connect(): Promise<Rcon> {
-    // rcon-client throws an uncaught exception for some reason... Catch here and handle it!
-    process.off('uncaughtException', this._detectDisconnection);
-    process.once('uncaughtException', this._detectDisconnection);
+  async init() {
+    // TODO: Get rid of this!
+    await ConfigParser.init();
 
+    await this.forceReconnect();
+  }
+
+  forceReconnect = async () => {
+    if (this._instance) {
+      this._instance.disconnect();
+    }
+
+    await this._config.init();
+
+    this._connectionAttempts = 0;
+    this._timeouts = 0;
+    this._serverWasDown = '1' === this._config.appState.serverWasDown;
+
+    if (this._config.authConfig.discordWebhookURL.value) {
+      this._discordWH = new DiscordWebhook({
+        webhookUrl: this._config.authConfig.discordWebhookURL.value,
+        adminName: this._config.authConfig.discordAdminName.value
+      });
+    }
+
+    return this.connect();
+  }
+
+  async connect(): Promise<Rcon> {
     try {
       this._connectionAttempts++;
 
-      const { host, port, password } = this._authConfig;
-
       Logger.server.info(
-        `RCON Attempt connection (${this._connectionAttempts}/${this._authConfig.maxConnectionAttempts.value}) to ${
-          host.value
-        }:${port.value}...`
+        `RCON Attempt connection (${this._connectionAttempts}/${
+          this._config.authConfig.maxConnectionAttempts.value
+        }) to ${this._config.socketAddress}...`
       );
 
-      await this._instance.connect({
-        host: host.value,
-        port: Number(port.value),
-        password: password.value
-      });
+      await this._instance.connect(this._config.connectData);
 
       this._markServerStatus(true);
 
@@ -163,13 +168,13 @@ export default class RCONClient {
       if ('Authentication failed: wrong password' === err.message) {
         Logger.server.error('Supplied RCON Password is invalid, please check your configuration!');
 
-        this._markServerStatus(false, true);
+        await this._markServerStatus(false, true);
       }
 
       const timedout = this.markPossibleTimeout(err, 'Authentication');
 
       if (timedout) {
-        return await this.connect();
+        await this.connect();
       }
     } finally {
       return this._instance;
@@ -178,7 +183,7 @@ export default class RCONClient {
 
   markPossibleTimeout(err: Error, type: string) {
     let wasTimeout = false;
-    const maxPacketTimeouts = Number(this._authConfig.maxPacketTimeouts.value);
+    const maxPacketTimeouts = Number(this._config.authConfig.maxPacketTimeouts.value);
 
     if (true === err.message.includes('Response timeout for packet id')) {
       this._timeouts++;
@@ -193,43 +198,6 @@ export default class RCONClient {
     }
 
     return wasTimeout;
-  }
-
-  async _markServerStatus(isUp: boolean, instant: boolean = false) {
-    // Mark as DOWN!
-    if (false === isUp) {
-      if (false === instant) {
-        Logger.server.error(
-          `RCON reached maximum connection retries (${this._authConfig.maxConnectionAttempts.value}), giving up.`
-        );
-      }
-
-      if (false === this._serverWasDown) {
-        if (this._discordWH) {
-          await this._discordWH.send(false);
-        }
-      }
-
-      this._connectionAttempts = Number(this._authConfig.maxConnectionAttempts.value);
-    } else {
-      // Server is UP! However, only mark if previously down
-      if (true === this._serverWasDown) {
-        if (this._discordWH) {
-          await this._discordWH.send(true);
-        }
-      }
-
-      this._connectionAttempts = 0;
-      this._timeouts = 0;
-    }
-
-    this._messagingBus.emit(EventMessages.RCON.ConnectionChange, isUp);
-
-    this._serverWasDown = !isUp;
-    this._appStateDao.saveStatePart({
-      propName: 'serverWasDown',
-      propValue: isUp ? '0' : '1'
-    });
   }
 }
 

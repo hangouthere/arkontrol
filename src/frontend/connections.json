@@ -1,4 +1,4 @@
 {
-  "websocket": "localhost:3000",
-  "arkontrol": "//localhost:3000"
+  "websocket": "192.168.1.100:3000",
+  "arkontrol": "//192.168.1.100:3000"
 }

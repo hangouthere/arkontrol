@@ -13,6 +13,9 @@ export default class RCONCommandList {
 
   constructor(client: RCONClient) {
     this._client = client;
+
+    this._client.instance.onDidAuthenticate(this._processCurrentCommand);
+    this._client.instance.onDidDisconnect(this._cancelAndStop);
   }
 
   init = async () => {
@@ -21,15 +24,13 @@ export default class RCONCommandList {
     // Used to actually operate on throughout lifecycle
     this._commandList = [...ConfigParser.commands.list];
 
-    this._client.instance.onDidConnect(this._processCurrentCommand);
-    this._client.instance.onDidDisconnect(this._cancelAndStop);
-
-    if (true === this._client.instance.authenticated) {
+    if (true === this._client.isAuthenticated) {
       this._processNextCommand();
     }
   }
 
   _cancelAndStop = () => {
+    console.log('cancelling');
     if (this._waitTimeout) {
       this._waitTimeout();
       this._waitTimeout = undefined;
@@ -47,7 +48,10 @@ export default class RCONCommandList {
     return this._processCurrentCommand();
   }
 
-  _processCurrentCommand = async () => {
+  _processCurrentCommand = async (): Promise<any> => {
+    this._cancelAndStop();
+
+    // We don't have a current command, so get one and process it
     if (!this._currentCommand) {
       return this._processNextCommand();
     }
@@ -62,42 +66,57 @@ export default class RCONCommandList {
 
       return this._processNextCommand();
     } catch (err) {
-      if (err.message.includes('Auth lost to server')) {
+      // TODO: Potentially remove this
+      // if (err.message.includes('Auth lost to server')) {
+      //   console.log('------- Auth lost???');
+      //   return undefined;
+      // }
+
+      // noop cancelled promises, as there's nothing to do
+      if (err.message === 'Cancelled Promise') {
         return undefined;
       }
 
       // Check for timeout
       const wasTimeout = this._client.markPossibleTimeout(err, this._currentCommand.split(' ')[0]);
 
+      // Retry if timed out
       if (wasTimeout) {
-        this._processCurrentCommand();
-      } else {
-        Logger.error('[CmdList] Unknown Error:', err);
+        return this._processCurrentCommand();
       }
+
+      Logger.error('[CmdList] Unknown Error:', err);
+
+      return undefined;
     }
   }
 
   async _execCurrentCommand(currCommand: string): Promise<string> {
-    if (false === this._client.instance.authenticated) {
-      const msg = 'Auth lost to server';
-      return Promise.reject(new Error(msg));
-    }
+    // TODO: Potentially remove this
+    // if (false === this._authenticated) {
+    //   const msg = 'Auth lost to server';
+    //   return Promise.reject(new Error(msg));
+    // }
 
     if (0 === currCommand.indexOf('wait')) {
-      const [, delayStr] = currCommand.split(' ');
-      const delay = parseInt(delayStr) || 1000;
-
-      const [delayPromise, cancel] = PromiseDelayCancellable(delay * 1000);
-
-      this._waitTimeout = cancel as Function;
-      await delayPromise;
-      this._waitTimeout = undefined;
-
-      return 'Wait Completed';
+      return this._waitCommand(currCommand);
     }
 
     const response = await this._client.instance.send(currCommand);
 
     return response;
+  }
+
+  async _waitCommand(waitCommand: string) {
+    const [, delayStr] = waitCommand.split(' ');
+    const delay = parseInt(delayStr) || 1000;
+
+    const [delayPromise, cancel] = PromiseDelayCancellable(delay * 1000);
+
+    this._waitTimeout = cancel as Function;
+    await delayPromise;
+    this._waitTimeout = undefined;
+
+    return 'Wait Completed';
   }
 }

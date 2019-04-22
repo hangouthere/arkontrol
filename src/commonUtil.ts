@@ -3,11 +3,11 @@ export const PromiseDelay = (ms: number) => new Promise(r => setTimeout(r, ms));
 export const PromiseDelayCancellable = (ms: number) => {
   let cancel: Function;
 
-  const promise = new Promise((r, c) => {
-    const cancelId = setTimeout(r, ms);
+  const promise = new Promise((resolve, reject) => {
+    const cancelId = setTimeout(resolve, ms);
     cancel = () => {
       clearTimeout(cancelId);
-      c('cancelled');
+      reject(new Error('Cancelled Promise'));
     };
   });
 

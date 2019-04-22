@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { PromiseDelay } from '../commonUtil';
+import { debounce, PromiseDelay } from '../commonUtil';
 import RCONClient from './rcon/RCONClient';
 import WebSocketServer from './servers/WebSocketServer';
 import LoggerConfig from './util/LoggerConfig';
@@ -23,6 +23,7 @@ export default class SocketMessageProxy {
   private _webSocketServer: WebSocketServer;
   private _rconClient: RCONClient;
   private _messagingBus: MessagingBus;
+  private _reconnectDebounce!: Function;
 
   constructor(options: ISocketMessageProxyInitOptions) {
     this._webSocketServer = options.socketServer;
@@ -33,6 +34,11 @@ export default class SocketMessageProxy {
   init() {
     this._messagingBus.on(EventMessages.Socket.Message, this._consumeMessage);
     this._messagingBus.on(EventMessages.RCON.ConnectionChange, this._updateStatus);
+
+    // Debounce reconnect to avoid RCON kerfuffle
+    // For some reason it likes to send back "keepalive"
+    // on auth when reconnected too fast, and too frequent
+    this._reconnectDebounce = debounce(this._rconClient.forceReconnect, 500);
   }
 
   _updateStatus = (isConnected: boolean) => {
@@ -79,7 +85,7 @@ export default class SocketMessageProxy {
 
     switch (command) {
       case 'reconnect':
-        this._rconClient.forceReconnect();
+        this._reconnectDebounce();
         break;
       case 'shutdown':
         const WARN_1 =

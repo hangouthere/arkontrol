@@ -2,7 +2,7 @@ import BaseDAO from './base';
 import { IAuthConfigEntry } from '../models/AuthConfig';
 
 class AuthConfigDAO extends BaseDAO {
-  async getConfigEntries() {
+  async getConfigEntries(): Promise<Array<IAuthConfigEntry>> {
     return await this._db.all('SELECT * FROM AuthConfig');
   }
 

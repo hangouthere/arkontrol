@@ -7,8 +7,8 @@ export interface IAuthConfigTuple {
 }
 
 export interface IAuthConfig {
-  discordAdminName?: IAuthConfigTuple;
-  discordWebhookURL?: IAuthConfigTuple;
+  discordAdminName: IAuthConfigTuple;
+  discordWebhookURL: IAuthConfigTuple;
   host: IAuthConfigTuple;
   maxConnectionAttempts: IAuthConfigTuple;
   maxPacketTimeouts: IAuthConfigTuple;

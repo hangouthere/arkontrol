@@ -21,12 +21,12 @@ export default class RCONStatus {
     this._client = client;
     this._dao = new PlayersDAO();
 
-    this._client.instance.onDidConnect(this._startIntervals);
+    this._client.instance.onDidAuthenticate(this._startIntervals);
     this._client.instance.onDidDisconnect(this._stopIntervals);
   }
 
   async init() {
-    if (true === this._client.instance.authenticated) {
+    if (true === this._client.isAuthenticated) {
       this._startIntervals();
     }
   }
