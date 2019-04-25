@@ -25,7 +25,6 @@ const CommonConfig = {
       // Define Rules
       Rules.Fonts,
       Rules.Images,
-      Rules.PackageJSON,
       Rules.SCSS,
       Rules.TSCompile
     ]

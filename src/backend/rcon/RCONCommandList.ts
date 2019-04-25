@@ -1,36 +1,50 @@
 import { PromiseDelayCancellable } from '../../commonUtil';
-import ConfigParser from '../util/ConfigParser';
+import { IArkCommandEntry } from '../database/models/ArkCommands';
 import LoggerConfig from '../util/LoggerConfig';
-import RCONClient from './RCONClient';
+import MessagingBus, { EventMessages } from '../util/MessagingBus';
+import RCONClient, { IRCONHelperInitOptions } from './RCONClient';
+import RCONConfig from './RCONConfig';
 
 const Logger = LoggerConfig.instance.getLogger('commands');
 
 export default class RCONCommandList {
+  private _config: RCONConfig;
+  private _messagingBus: MessagingBus;
   private _client: RCONClient;
-  private _commandList!: Array<string>;
-  private _currentCommand: string = '';
+  private _commandList!: Array<IArkCommandEntry>;
+  private _currentCommand?: IArkCommandEntry;
   private _waitTimeout!: Function | undefined;
 
-  constructor(client: RCONClient) {
-    this._client = client;
+  constructor(options: IRCONHelperInitOptions) {
+    this._client = options.client;
+    this._messagingBus = options.messagingBus;
+
+    this._config = new RCONConfig();
+
+    this._messagingBus.on(EventMessages.RCON.CommandsChange, this._onCommandChange);
 
     this._client.instance.onDidAuthenticate(this._processCurrentCommand);
     this._client.instance.onDidDisconnect(this._cancelAndStop);
   }
 
   init = async () => {
-    await ConfigParser.init();
+    await this._config.initCommands();
 
     // Used to actually operate on throughout lifecycle
-    this._commandList = [...ConfigParser.commands.list];
+    this._commandList = [...this._config.arkCommands];
 
     if (true === this._client.isAuthenticated) {
       this._processNextCommand();
     }
   }
 
+  _onCommandChange = () => {
+    Logger.info('[CmdList] Change detected, restarting commands...');
+    this._cancelAndStop();
+    this.init();
+  }
+
   _cancelAndStop = () => {
-    console.log('cancelling');
     if (this._waitTimeout) {
       this._waitTimeout();
       this._waitTimeout = undefined;
@@ -43,7 +57,7 @@ export default class RCONCommandList {
       return setTimeout(this.init, 0);
     }
 
-    this._currentCommand = this._commandList.shift() as string;
+    this._currentCommand = this._commandList.shift();
 
     return this._processCurrentCommand();
   }
@@ -56,29 +70,26 @@ export default class RCONCommandList {
       return this._processNextCommand();
     }
 
-    Logger.info('[CmdList] Exec:', this._currentCommand);
+    Logger.info('[CmdList] Exec:', this._currentCommand.command);
 
     try {
-      let result = await this._execCurrentCommand(this._currentCommand);
+      let result = await this._execCurrentCommand(this._currentCommand.command);
       result = result.replace(/\s?\n\s?$/, ''); // Remove trailing newline
 
       Logger.info('[CmdList] Result:', result);
 
       return this._processNextCommand();
     } catch (err) {
-      // TODO: Potentially remove this
-      // if (err.message.includes('Auth lost to server')) {
-      //   console.log('------- Auth lost???');
-      //   return undefined;
-      // }
-
       // noop cancelled promises, as there's nothing to do
       if (err.message === 'Cancelled Promise') {
         return undefined;
       }
 
       // Check for timeout
-      const wasTimeout = this._client.markPossibleTimeout(err, this._currentCommand.split(' ')[0]);
+      const wasTimeout = this._client.markPossibleTimeout(
+        err,
+        '[CmdList] ' + this._currentCommand.command.split(' ')[0]
+      );
 
       // Retry if timed out
       if (wasTimeout) {
@@ -92,12 +103,6 @@ export default class RCONCommandList {
   }
 
   async _execCurrentCommand(currCommand: string): Promise<string> {
-    // TODO: Potentially remove this
-    // if (false === this._authenticated) {
-    //   const msg = 'Auth lost to server';
-    //   return Promise.reject(new Error(msg));
-    // }
-
     if (0 === currCommand.indexOf('wait')) {
       return this._waitCommand(currCommand);
     }

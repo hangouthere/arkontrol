@@ -1,13 +1,21 @@
+import { IAuthConfig, IAuthConfigEntry } from '../models/AuthConfig';
 import BaseDAO from './base';
-import { IAuthConfigEntry } from '../models/AuthConfig';
 
 class AuthConfigDAO extends BaseDAO {
   async getConfigEntries(): Promise<Array<IAuthConfigEntry>> {
     return await this._db.all('SELECT * FROM AuthConfig');
   }
 
-  async saveConfigPart({ propName, propValue }: IAuthConfigEntry) {
-    await this._db.run('UPDATE AuthConfig SET propValue = ? WHERE propName = ?', propValue, propName);
+  async saveConfig(config: IAuthConfig) {
+    await Promise.all(
+      Object.entries(config).map(([key, entry]) =>
+        this._db.run(
+          'UPDATE AuthConfig SET propValue = ? WHERE propName = ?',
+          (entry as IAuthConfigEntry).propValue,
+          key
+        )
+      )
+    );
 
     return this.getConfigEntries();
   }

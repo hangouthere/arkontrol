@@ -1,5 +1,6 @@
 {
   "list": [
+    "wait 9000",
     "broadcast <RichColor Color=\"0, 1, 0, 1\">ATTENTION NEW SURVIVALISTS!</> Be sure you're following us on<RichColor Color=\"0.12, 0.73, 0.93, 1\">Mixer</> and<RichColor Color=\"0.44, 0.54, 0.85, 1\">Discord</> (with the Ark role) and register your player with the Community! If you're not active on <RichColor Color=\"0.44, 0.54, 0.85, 1\">Discord</>, you won't last here very long! <RichColor Color=\"0.44, 0.54, 0.85, 1\">http://rebrand.ly/nfgDiscord</>",
     "wait 900",
     "broadcast <RichColor Color=\"0.95, 0.45, 0.2, 1\">Did You Know?</> We have XP settings customized in an interesting way - you pretty much ONLY get XP for killing and crafting.                                   New players will want to purchase dinos from other players to get started, and you'll level up fast!",

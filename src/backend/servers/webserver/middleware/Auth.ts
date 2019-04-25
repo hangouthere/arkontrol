@@ -1,6 +1,6 @@
 import { Context } from 'koa';
-import jwt from 'koa-jwt';
 import compose from 'koa-compose';
+import jwt from 'koa-jwt';
 import { IMiddleware } from 'koa-router';
 import { IUser } from '../../../database/models/User';
 

@@ -8,7 +8,7 @@ import PlayerList from '../components/players/PlayerList';
 import { PlayersActions } from '../store/actions/players';
 import { IRootState } from '../store/reducers';
 import { IPlayersState } from '../store/reducers/players';
-import PlayerMessages from './PlayerMessenger';
+import PlayerMessages from './admin/PlayerMessenger';
 
 const REFRESH_INTERVAL = 60 * 1000;
 

@@ -1,7 +1,4 @@
 import wretch from 'wretch';
-import AuthConfigDAO from './database/dao/AuthConfigDAO';
-import AuthConfig, { IAuthConfig } from './database/models/AuthConfig';
-import ConfigParser from './util/ConfigParser';
 
 const COLOR_DOWN = 16711680;
 const COLOR_UP = 65280;

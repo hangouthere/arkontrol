@@ -1,5 +1,5 @@
-import BaseDAO from './base';
 import Player from '../models/Player';
+import BaseDAO from './base';
 
 class PlayersDAO extends BaseDAO {
   async getOnlinePlayers() {

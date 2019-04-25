@@ -9,25 +9,6 @@ const {
 } = require('./buildTime');
 
 /**
- * Copy RCON Configs to output via `file-loader`
- */
-const PackageJSON = {
-  // `type` needed to avoid default JSON loader
-  type: 'javascript/auto',
-  test: /rconConfig.*json$/,
-  exclude: /node_modules/,
-  use: [
-    {
-      loader: 'file-loader',
-      options: {
-        outputPath: 'rconConfig',
-        name: '[name].[ext]'
-      }
-    }
-  ]
-};
-
-/**
  * Transpile TS[X] files
  */
 const TSCompile = {
@@ -111,7 +92,6 @@ const Fonts = {
 module.exports = {
   Fonts,
   Images,
-  PackageJSON,
   SCSS,
   SourceMaps,
   TSCompile

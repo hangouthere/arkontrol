@@ -4,10 +4,10 @@ import { Redirect, RouteComponentProps } from 'react-router';
 import { Dispatch } from 'redux';
 import LoginForm from '../components/LoginForm';
 import { IAuthRequest } from '../services/auth';
+import { ShowToaster } from '../services/toaster';
 import { AuthActions } from '../store/actions/auth';
 import { IRootState } from '../store/reducers';
 import { IAuthState } from '../store/reducers/auth';
-import { ShowToaster } from '../services/toaster';
 
 interface IProps extends RouteComponentProps {
   auth: IAuthState;

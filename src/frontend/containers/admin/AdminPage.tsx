@@ -1,8 +1,8 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Dispatch } from 'redux';
-import AdminPanel from '../components/admin/AdminPanel';
-import { AdminActions } from '../store/actions/admin';
+import AdminPanel from '../../components/admin/AdminPanel';
+import { AdminActions } from '../../store/actions/admin';
 
 interface IProps {
   adminCommand: typeof AdminActions.adminCommand;

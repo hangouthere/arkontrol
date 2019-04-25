@@ -1,5 +1,5 @@
+import { Button, Classes, InputGroup, Popover } from '@blueprintjs/core';
 import React from 'react';
-import { Button, Popover, Classes, InputGroup, FormGroup } from '@blueprintjs/core';
 import ConfirmAdminAction from './ConfirmAdminAction';
 
 interface IProps {

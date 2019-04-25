@@ -1,10 +1,12 @@
-import { combineReducers } from 'redux';
+import { combineReducers, Reducer } from 'redux';
+import { ArkCommandsReducers, IArkCommandsState } from './arkCommands';
 import { AuthReducers, IAuthState } from './auth';
 import { AuthConfigReducers, IAuthConfigState } from './authConfig';
 import { IPlayersState, PlayersReducers } from './players';
 import { IRemoteStatusState, RemoteStatusReducers } from './remoteStatus';
 
 export interface IRootState {
+  ArkCommands: IArkCommandsState;
   AuthConfig: IAuthConfigState;
   Auth: IAuthState;
   Players: IPlayersState;
@@ -12,12 +14,13 @@ export interface IRootState {
 }
 
 export default class RootReducerCreator {
-  rootReducer: any;
+  rootReducer: Reducer<IRootState>;
 
   constructor() {
     this.rootReducer = combineReducers({
-      AuthConfig: AuthConfigReducers,
+      ArkCommands: ArkCommandsReducers,
       Auth: AuthReducers,
+      AuthConfig: AuthConfigReducers,
       Players: PlayersReducers,
       RemoteStatus: RemoteStatusReducers
     });

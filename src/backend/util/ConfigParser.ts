@@ -1,7 +1,7 @@
-import path from 'path';
 import fs from 'fs-extra';
-import LoggerConfig from './LoggerConfig';
+import path from 'path';
 import RootPath from '../RootPath';
+import LoggerConfig from './LoggerConfig';
 
 // Using consts to avoid `pkg` assuming they're assets to include
 const rconConfigName = 'rconConfig';

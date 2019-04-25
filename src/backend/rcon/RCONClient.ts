@@ -1,7 +1,6 @@
 import { Rcon } from 'rcon-client';
 import { debounce } from '../../commonUtil';
 import DiscordWebhook from '../DiscordWebhook';
-import ConfigParser from '../util/ConfigParser';
 import LoggerConfig from '../util/LoggerConfig';
 import MessagingBus, { EventMessages } from '../util/MessagingBus';
 import RCONConfig from './RCONConfig';
@@ -12,8 +11,13 @@ const Logger = {
   presence: LoggerConfig.instance.getLogger('presence')
 };
 
-interface IRconClientInitOptions {
+interface IRCONClientInitOptions {
   messagingBus: MessagingBus;
+}
+
+export interface IRCONHelperInitOptions {
+  messagingBus: MessagingBus;
+  client: RCONClient;
 }
 
 export default class RCONClient {
@@ -35,10 +39,10 @@ export default class RCONClient {
   }
 
   private get _reachedMaxAttempts() {
-    return this._connectionAttempts >= Number(this._config.authConfig.maxConnectionAttempts.value);
+    return this._connectionAttempts >= Number(this._config.authConfig.maxConnectionAttempts.propValue);
   }
 
-  constructor(options: IRconClientInitOptions) {
+  constructor(options: IRCONClientInitOptions) {
     // rcon-client throws an uncaught exception for some reason... Catch here and handle it!
     process.on('uncaughtException', this._detectUndesiredDisconnection);
 
@@ -62,7 +66,7 @@ export default class RCONClient {
   }
 
   private async _markServerStatus(isUp: boolean, instant: boolean = false) {
-    const maxConnAttempts = Number(this._config.authConfig.maxConnectionAttempts.value);
+    const maxConnAttempts = Number(this._config.authConfig.maxConnectionAttempts.propValue);
 
     // Mark as DOWN!
     if (false === isUp) {
@@ -122,9 +126,6 @@ export default class RCONClient {
   }
 
   async init() {
-    // TODO: Get rid of this!
-    await ConfigParser.init();
-
     await this.forceReconnect();
   }
 
@@ -133,16 +134,16 @@ export default class RCONClient {
       this._instance.disconnect();
     }
 
-    await this._config.init();
+    await this._config.initAuth();
 
     this._connectionAttempts = 0;
     this._timeouts = 0;
     this._serverWasDown = '1' === this._config.appState.serverWasDown;
 
-    if (this._config.authConfig.discordWebhookURL.value) {
+    if (this._config.authConfig.discordWebhookURL.propValue) {
       this._discordWH = new DiscordWebhook({
-        webhookUrl: this._config.authConfig.discordWebhookURL.value,
-        adminName: this._config.authConfig.discordAdminName.value
+        webhookUrl: this._config.authConfig.discordWebhookURL.propValue,
+        adminName: this._config.authConfig.discordAdminName.propValue
       });
     }
 
@@ -155,7 +156,7 @@ export default class RCONClient {
 
       Logger.server.info(
         `RCON Attempt connection (${this._connectionAttempts}/${
-          this._config.authConfig.maxConnectionAttempts.value
+          this._config.authConfig.maxConnectionAttempts.propValue
         }) to ${this._config.socketAddress}...`
       );
 
@@ -183,7 +184,7 @@ export default class RCONClient {
 
   markPossibleTimeout(err: Error, type: string) {
     let wasTimeout = false;
-    const maxPacketTimeouts = Number(this._config.authConfig.maxPacketTimeouts.value);
+    const maxPacketTimeouts = Number(this._config.authConfig.maxPacketTimeouts.propValue);
 
     if (true === err.message.includes('Response timeout for packet id')) {
       this._timeouts++;

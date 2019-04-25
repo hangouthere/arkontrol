@@ -22,6 +22,7 @@ CREATE TABLE AuthConfig (
 );
 CREATE TABLE Commands (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  'order' INTEGER NOT NULL,
   command TEXT NOT NULL
 );
 CREATE TABLE AppState (
@@ -48,12 +49,12 @@ VALUES
   ('discordWebhookURL', '', 'The Discord WebHook URL to post the Server Status.<br />Leave blank to disable Discord Webhook integration.'),
   ('discordAdminName', 'Your Server Admin', 'The Discord user responsible for the Server availability.');
 
-INSERT INTO Commands (command)
+INSERT INTO Commands ('order', command)
 VALUES 
-  ('broadcast <RichColor Color=\"0, 1, 0, 1\">Congratulations!</> ArKontrol is operational!'),
-  ('wait 10'),
-  ('broadcast <RichColor Color=\"0.95, 0.45, 0.2, 1\">Now go forth</>, and configure your Commands to run when you want!'),
-  ('wait 30');
+  (1, 'broadcast <RichColor Color="0, 1, 0, 1">Congratulations!</> ArKontrol is operational!'),
+  (2, 'wait 10'),
+  (3, 'broadcast <RichColor Color="0.95, 0.45, 0.2, 1">Now go forth</>, and configure your Commands to run when you want!'),
+  (4, 'wait 30');
 
 INSERT INTO AppState (propName, propValue)
 VALUES 

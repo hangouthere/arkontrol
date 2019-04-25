@@ -1,6 +1,6 @@
+import { Icon, Intent } from '@blueprintjs/core';
 import React from 'react';
 import { IRemoteStatusState } from '../../store/reducers/remoteStatus';
-import { Intent, Icon } from '@blueprintjs/core';
 
 const Footer: React.FC<IRemoteStatusState> = props => (
   <footer id="StatusFooter" className="flex-display">

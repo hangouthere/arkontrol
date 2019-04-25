@@ -2,7 +2,8 @@ import { EventEmitter } from 'events';
 
 export const EventMessages = {
   RCON: {
-    ConnectionChange: 'rcon::SET_SERVER_STATUS'
+    ConnectionChange: 'rcon::SET_SERVER_STATUS',
+    CommandsChange: 'rcon::COMMANDS_CHANGE'
   },
 
   Socket: {

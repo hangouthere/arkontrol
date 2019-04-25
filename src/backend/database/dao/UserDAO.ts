@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { IUser, IAuthRequest } from '../models/User';
+import { IAuthRequest, IUser } from '../models/User';
 import BaseDAO from './base';
 
 const SALT = 'ArKontrolSecretSalt';

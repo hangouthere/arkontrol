@@ -1,7 +1,8 @@
 import PlayersDAO from '../database/dao/PlayersDAO';
-import LoggerConfig from '../util/LoggerConfig';
 import Player from '../database/models/Player';
-import RCONClient from './RCONClient';
+import LoggerConfig from '../util/LoggerConfig';
+import RCONClient, { IRCONHelperInitOptions } from './RCONClient';
+import MessagingBus from '../util/MessagingBus';
 
 const CHAT_BUFFER_FREQ = 10 * 1000;
 const USER_LIST_UPDATE_FREQ = 3 * 1000;
@@ -14,11 +15,13 @@ const Logger = {
 
 export default class RCONStatus {
   private _client: RCONClient;
+  private _messagingBus: MessagingBus;
   private _interval: Array<NodeJS.Timeout> = [];
   private _dao!: PlayersDAO;
 
-  constructor(client: RCONClient) {
-    this._client = client;
+  constructor(options: IRCONHelperInitOptions) {
+    this._client = options.client;
+    this._messagingBus = options.messagingBus;
     this._dao = new PlayersDAO();
 
     this._client.instance.onDidAuthenticate(this._startIntervals);

@@ -1,31 +1,23 @@
 export interface IAuthConfigEntry {
   propName: string;
-  propValue: string;
+  propValue: any;
   propDesc: string;
 }
 
-export interface IAuthConfigTuple {
-  value: string;
-  desc: string;
-}
-
 export interface IAuthConfig {
-  host: IAuthConfigTuple;
-  port: IAuthConfigTuple;
-  password: IAuthConfigTuple;
-  maxConnectionAttempts: IAuthConfigTuple;
-  maxPacketTimeouts: IAuthConfigTuple;
-  discordAdminName: IAuthConfigTuple;
-  discordWebhookURL: IAuthConfigTuple;
+  host: IAuthConfigEntry;
+  port: IAuthConfigEntry;
+  password: IAuthConfigEntry;
+  maxConnectionAttempts: IAuthConfigEntry;
+  maxPacketTimeouts: IAuthConfigEntry;
+  discordAdminName: IAuthConfigEntry;
+  discordWebhookURL: IAuthConfigEntry;
 }
 
 class AuthConfig {
   static fromDAO(entries: Array<IAuthConfigEntry>): AuthConfig {
     const config = entries.reduce<Partial<IAuthConfig>>((cfg, entry) => {
-      cfg[entry.propName] = {
-        value: entry.propValue,
-        desc: entry.propDesc
-      };
+      cfg[entry.propName] = entry;
 
       return cfg;
     }, {});

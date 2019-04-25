@@ -1,9 +1,9 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
+import wretch from 'wretch';
 import App from './containers/common/App';
 import ReduxStore from './store';
-import wretch from 'wretch';
 
 const store = ReduxStore.store;
 

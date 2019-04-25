@@ -2,12 +2,12 @@ import { Button, HTMLSelect, InputGroup, IOptionProps } from '@blueprintjs/core'
 import React from 'react';
 import { connect } from 'react-redux';
 import { Dispatch } from 'redux';
-import { IUser } from '../services/auth';
-import { IPlayer } from '../services/players';
-import { AdminActions } from '../store/actions/admin';
-import { PlayersActions } from '../store/actions/players';
-import { IRootState } from '../store/reducers';
-import { IPlayersState } from '../store/reducers/players';
+import { IUser } from '../../services/auth';
+import { IPlayer } from '../../services/players';
+import { AdminActions } from '../../store/actions/admin';
+import { PlayersActions } from '../../store/actions/players';
+import { IRootState } from '../../store/reducers';
+import { IPlayersState } from '../../store/reducers/players';
 
 interface IProps {
   playerInfo: IPlayersState;

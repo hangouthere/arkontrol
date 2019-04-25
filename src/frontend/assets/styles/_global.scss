@@ -35,6 +35,12 @@ body {
   &-center {
     justify-content: center;
   }
+
+  &-align {
+    & > * {
+      align-self: center;
+    }
+  }
 }
 
 .space-elements {

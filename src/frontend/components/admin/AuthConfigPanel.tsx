@@ -1,14 +1,14 @@
 import { Button, FormGroup, Icon, InputGroup, Intent, NumericInput, Tooltip } from '@blueprintjs/core';
 import React from 'react';
-import { IAuthConfig, IAuthConfigTuple, ILoadingParts } from '../../store/reducers/authConfig';
-
-const SHOW_UPDATED_DURATION = 3000;
+import { IAuthConfig, IAuthConfigEntry, IAuthConfigUpdateEntry } from '../../store/reducers/authConfig';
 
 interface IProps {
   config: IAuthConfig;
-  loadingParts: ILoadingParts;
-  updateLoadingPart: (part: string, value?: string) => void;
-  changeConfigPart: (event: React.ChangeEvent<HTMLFormElement>) => void;
+  isLoading: boolean;
+  hasChange: boolean;
+  shouldReconnect: boolean;
+  saveConfig: React.MouseEventHandler;
+  changeConfigPart: (entry: IAuthConfigUpdateEntry) => void;
   sysCommand: (cmd: string) => void;
 }
 
@@ -67,9 +67,11 @@ class AuthConfigPanel extends React.PureComponent<IProps, IState> {
 
     switch (type) {
       case 'number':
+        // Cleanup because NumericInput uses value ONLY,
+        // and defaultValue is passed on causing dual-use errors
         delete extendedProps['defaultValue'];
         (extendedProps as any).value = inputProps.defaultValue;
-        return <NumericInput min={1} {...extendedProps} />;
+        return <NumericInput min={1} onValueChange={this._onChangeNumericInput(inputProps.id)} {...extendedProps} />;
       case 'password':
         (extendedProps as any).rightElement = this._buildLockButton(inputProps.id);
         type = this.state.showPassword[inputProps.id] ? 'text' : type;
@@ -81,29 +83,11 @@ class AuthConfigPanel extends React.PureComponent<IProps, IState> {
   _createFormGroup(id: string, label: string, inputType: string = 'text', extraClasses = '') {
     let loadingState: Intent = 'none';
 
-    const authConfigTuple: IAuthConfigTuple = this.props.config[id];
-
-    if (this.props.loadingParts[id]) {
-      const loadingVal = this.props.loadingParts[id].split('|');
-
-      if ('changing' === loadingVal[0]) {
-        loadingState = 'warning';
-      } else if ('completed' === loadingVal[0]) {
-        loadingState = 'success';
-      }
-    }
-
-    // Detected a success, which will color the field,
-    // but we want to clear it later to update UI
-    if ('success' === loadingState) {
-      setTimeout(() => {
-        this.props.updateLoadingPart(id, undefined);
-      }, SHOW_UPDATED_DURATION);
-    }
+    const authConfigEntry: IAuthConfigEntry = this.props.config[id];
 
     const inputComponent = this._createInputType(inputType, {
       id,
-      defaultValue: authConfigTuple.value,
+      defaultValue: authConfigEntry.propValue,
       intent: loadingState
     });
 
@@ -111,7 +95,7 @@ class AuthConfigPanel extends React.PureComponent<IProps, IState> {
       <FormGroup
         label={label}
         labelFor={id}
-        labelInfo={this._buildDescriptionToolTip(authConfigTuple.desc)}
+        labelInfo={this._buildDescriptionToolTip(authConfigEntry.propDesc)}
         className={extraClasses}
       >
         {inputComponent}
@@ -119,32 +103,50 @@ class AuthConfigPanel extends React.PureComponent<IProps, IState> {
     );
   }
 
+  _onChangeForm = (event: React.ChangeEvent<HTMLFormElement>) => {
+    this.props.changeConfigPart({ propName: event.target.name, propValue: event.target.value });
+  }
+
+  _onChangeNumericInput = (propName: string) => (val: number) =>
+    this.props.changeConfigPart({ propName, propValue: val })
+
   render() {
     return (
-      <form className="configForm" onChange={this.props.changeConfigPart}>
-        <div className="flex-display space-elements-horizontal">
-          {this._createFormGroup('host', 'Host', undefined, 'flex-grow')}
-          {this._createFormGroup('port', 'Port', 'number', 'smallNumberInput')}
-        </div>
+      <div id="AuthConfigPanel">
+        <form className="configForm" onChange={this._onChangeForm}>
+          <div className="flex-display space-elements-horizontal">
+            {this._createFormGroup('host', 'Host', undefined, 'flex-grow')}
+            {this._createFormGroup('port', 'Port', 'number', 'smallNumberInput')}
+          </div>
 
-        <div className="flex-display space-elements-horizontal">
-          {this._createFormGroup('password', 'RCON Password', 'password', 'flex-grow')}
-          {this._createFormGroup('maxConnectionAttempts', 'Max Conn', 'number', 'smallNumberInput')}
-          {this._createFormGroup('maxPacketTimeouts', 'Max TTF', 'number', 'smallNumberInput')}
-        </div>
+          <div className="flex-display space-elements-horizontal">
+            {this._createFormGroup('password', 'RCON Password', 'password', 'flex-grow')}
+            {this._createFormGroup('maxConnectionAttempts', 'Max Conn', 'number', 'smallNumberInput')}
+            {this._createFormGroup('maxPacketTimeouts', 'Max TTF', 'number', 'smallNumberInput')}
+          </div>
 
-        {this._createFormGroup('discordAdminName', 'Discord Admin Name')}
-        {this._createFormGroup('discordWebhookURL', 'Discord WebHook URL')}
+          {this._createFormGroup('discordAdminName', 'Discord Admin Name')}
+          {this._createFormGroup('discordWebhookURL', 'Discord WebHook URL')}
 
-        <div className="flex-display flex-center">
-          <Button
-            text="Reconnect ArKontrol"
-            icon="refresh"
-            alignText="left"
-            onClick={this.props.sysCommand.bind(null, 'reconnect')}
-          />
-        </div>
-      </form>
+          <div className="flex-display">
+            <Button
+              text="Save"
+              icon="floppy-disk"
+              onClick={this.props.saveConfig}
+              disabled={!this.props.hasChange || this.props.isLoading}
+              intent={this.props.hasChange ? 'warning' : 'success'}
+            />
+            <div className="flex-grow" />
+            <Button
+              text="Reconnect ArKontrol"
+              icon="refresh"
+              onClick={this.props.sysCommand.bind(null, 'reconnect')}
+              intent={!this.props.hasChange && this.props.shouldReconnect ? 'warning' : 'none'}
+              disabled={this.props.hasChange || !this.props.shouldReconnect || this.props.isLoading}
+            />
+          </div>
+        </form>
+      </div>
     );
   }
 }

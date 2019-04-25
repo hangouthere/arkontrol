@@ -1,11 +1,8 @@
 import 'source-map-support/register';
-// TODO: Get rid of this!
-// WebPack will copy this to our dist folder
-import './rconConfig';
 
 import fetch from 'node-fetch';
 import Database from './database';
-import RCONClient from './rcon/RCONClient';
+import RCONClient, { IRCONHelperInitOptions } from './rcon/RCONClient';
 import RCONCommandList from './rcon/RCONCommandList';
 import RCONStatus from './rcon/RCONStatus';
 import KoaServer from './servers/webserver';
@@ -65,8 +62,13 @@ class BackendApp {
 
     await this._rconClient.init();
 
-    const rconCmdList = new RCONCommandList(this._rconClient);
-    const rconStatus = new RCONStatus(this._rconClient);
+    const rconHelperInitOptions: IRCONHelperInitOptions = {
+      messagingBus: this._messagingBus,
+      client: this._rconClient
+    };
+
+    const rconCmdList = new RCONCommandList(rconHelperInitOptions);
+    const rconStatus = new RCONStatus(rconHelperInitOptions);
 
     await rconCmdList.init();
     await rconStatus.init();

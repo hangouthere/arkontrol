@@ -1,5 +1,5 @@
-import BaseDAO from './base';
 import { IAppStateEntry } from '../models/AppState';
+import BaseDAO from './base';
 
 class AppStateDAO extends BaseDAO {
   async getStateEntries() {

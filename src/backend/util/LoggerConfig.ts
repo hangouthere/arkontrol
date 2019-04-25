@@ -1,5 +1,5 @@
-import path from 'path';
 import log4js, { Log4js } from 'log4js';
+import path from 'path';
 import RootPath from '../RootPath';
 
 // TODO: Convert these to Config vars
