@@ -1,15 +1,15 @@
 import { Context } from 'koa';
 import Router from 'koa-router';
+import { IKoaServerInitOptions } from '..';
 import ArkCommandsDAO from '../../../database/dao/ArkCommandsDAO';
 import AuthConfigDAO from '../../../database/dao/AuthConfigDAO';
 import ArkCommands from '../../../database/models/ArkCommands';
 import AuthConfig from '../../../database/models/AuthConfig';
-import { hasAnyRole, JTWVerify } from '../middleware/Auth';
-import BaseRoute, { IRouteInitOptions } from './base';
 import { EventMessages } from '../../../util/MessagingBus';
+import { hasAnyRole, JTWVerify } from '../middleware/Auth';
+import BaseRoute from './base';
 
 class AdminRoutes extends BaseRoute {
-  private _router!: Router;
   private _authConfigDAO!: AuthConfigDAO;
   private _commandsDAO!: ArkCommandsDAO;
 
@@ -17,7 +17,7 @@ class AdminRoutes extends BaseRoute {
     return this._router.routes();
   }
 
-  constructor(options: IRouteInitOptions) {
+  constructor(options: IKoaServerInitOptions) {
     super(options);
 
     this._router = new Router({ prefix: '/admin' });

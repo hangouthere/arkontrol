@@ -12,7 +12,7 @@
     "start": "cd ./_dist/backend && node ./index.js",
     "start:build": "cd ./_build && index-win.exe",
     "start:dev": "concurrently -c black.bgCyan,cyan -n BackEnd,FrontEnd \"npm run start:dev:backend\" \"npm run start:dev:frontend\"",
-    "start:dev:backend": "concurrently -c black.bgMagenta,magenta -n Compile,Runtime \"cross-env HOT=1 npm run build:dev:backend -- --watch\" \"sleep 10 && nodemon --inspect -w ./_dist/backend -i stats/* ./_dist/backend/index.js\"",
+    "start:dev:backend": "concurrently -c black.bgMagenta,magenta -n Compile,Runtime \"cross-env HOT=1 npm run build:dev:backend -- --watch\" \"sleep 10 && nodemon --inspect -i logs/* -w ./_dist/backend ./_dist/backend/index.js\"",
     "start:dev:frontend": "cross-env HOT=1 webpack-dev-server --hot --config ./.config/webpack.frontend.config.js",
     "build:dev": "concurrently -c black.bgCyan,cyan -n BackEnd,FrontEnd \"npm run build:dev:backend\" \"npm run build:dev:frontend\"",
     "build:dev:frontend_dll": "cross-env NODE_ENV='development' webpack --display-modules --config ./.config/webpack.frontend_dll.config.js",

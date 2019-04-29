@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { Dispatch } from 'redux';
 import AdminPanel from '../../components/admin/AdminPanel';
 import { AdminActions } from '../../store/actions/admin';
+import { ShowToaster } from '../../services/toaster';
 
 interface IProps {
   adminCommand: typeof AdminActions.adminCommand;
@@ -25,10 +26,15 @@ class AdminPage extends React.PureComponent<IProps, IState> {
     });
   }
 
-  performRawCommand = (event: React.FormEvent<HTMLFormElement>) => {
+  performRawCommand = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    AdminActions.adminCommand(this.state.rawCommand);
+    await this.props.adminCommand(this.state.rawCommand);
+
+    ShowToaster({
+      message: 'Raw command sent!',
+      intent: 'success'
+    });
 
     this.setState({
       rawCommand: ''

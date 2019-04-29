@@ -11,6 +11,7 @@ const Navigation: React.FC<IProps> = props => {
   const adminButtons = !props.user ? null : (
     <React.Fragment>
       <NavButton icon="crown" text="Admin Panel" to="/adminPanel" exact={true} className="bp3-minimal" />
+      <NavButton icon="document" text="Logs" to="/logs" exact={true} className="bp3-minimal" />
       <NavButton icon="badge" text="Server Config" to="/serverConfig" exact={true} className="bp3-minimal" />
     </React.Fragment>
   );

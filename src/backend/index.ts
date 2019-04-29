@@ -8,7 +8,6 @@ import RCONStatus from './rcon/RCONStatus';
 import KoaServer from './servers/webserver';
 import WebSocketServer from './servers/WebSocketServer';
 import SocketMessageProxy from './SocketMessageProxy';
-import ConfigParser from './util/ConfigParser';
 import MessagingBus from './util/MessagingBus';
 
 (global as any).fetch = fetch;
@@ -32,7 +31,6 @@ class BackendApp {
     this._messagingBus = new MessagingBus();
 
     await Database.init();
-    await ConfigParser.init();
 
     this.initWebServer();
     this.initSocketServer();
@@ -44,7 +42,8 @@ class BackendApp {
     this._koaServer = new KoaServer({
       messagingBus: this._messagingBus,
       port: SERVER_PORT,
-      publicPath: '../public'
+      publicPath: '../public',
+      logPath: './logs'
     });
   }
 

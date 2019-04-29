@@ -9,12 +9,22 @@ const COMMON_BACKUP_COUNT: number = 5;
 // Using consts to avoid `pkg` assuming they're assets to include
 const logsName = 'logs';
 const debugLogName = 'debug.txt';
-const chatLogName = 'chat.txt';
-const presenceLogName = 'presence.txt';
-const serverLogName = 'server.txt';
-const commandsLogName = 'commands.txt';
+const chatLogName = 'chat.json';
+const presenceLogName = 'presence.json';
+const serverLogName = 'server.json';
+const commandsLogName = 'commands.json';
 
 export const LOG_PATH = path.resolve(RootPath, logsName);
+
+log4js.addLayout('json', _config => logEvent => {
+  return (
+    JSON.stringify({
+      timestamp: logEvent.startTime,
+      data: logEvent.data.join(' '),
+      logLevel: (logEvent.level as any).levelStr
+    }) + ','
+  );
+});
 
 const Log4JSConfig = {
   appenders: {
@@ -34,8 +44,7 @@ const Log4JSConfig = {
       backups: COMMON_BACKUP_COUNT,
       compress: true,
       layout: {
-        type: 'pattern',
-        pattern: '[%d{ISO8601_WITH_TZ_OFFSET}] ----%n%m'
+        type: 'json'
       }
     },
     presence: {
@@ -45,8 +54,7 @@ const Log4JSConfig = {
       backups: COMMON_BACKUP_COUNT,
       compress: true,
       layout: {
-        type: 'pattern',
-        pattern: '[%d{ISO8601_WITH_TZ_OFFSET}] [%p] - %m'
+        type: 'json'
       }
     },
     server: {
@@ -56,8 +64,7 @@ const Log4JSConfig = {
       backups: COMMON_BACKUP_COUNT,
       compress: true,
       layout: {
-        type: 'pattern',
-        pattern: '[%d{ISO8601_WITH_TZ_OFFSET}] [%p] - %m'
+        type: 'json'
       }
     },
     commands: {
@@ -67,8 +74,7 @@ const Log4JSConfig = {
       backups: COMMON_BACKUP_COUNT,
       compress: true,
       layout: {
-        type: 'pattern',
-        pattern: '[%d{ISO8601_WITH_TZ_OFFSET}] [%p] - %m'
+        type: 'json'
       }
     }
   },

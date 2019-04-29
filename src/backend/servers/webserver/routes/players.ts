@@ -1,17 +1,17 @@
 import { Context } from 'koa';
 import Router from 'koa-router';
+import { IKoaServerInitOptions } from '..';
 import PlayersDAO from '../../../database/dao/PlayersDAO';
-import BaseRoute, { IRouteInitOptions } from './base';
+import BaseRoute from './base';
 
 class PlayersRoutes extends BaseRoute {
-  private _router!: Router;
   private _playersDAO!: PlayersDAO;
 
   get routes() {
     return this._router.routes();
   }
 
-  constructor(options: IRouteInitOptions) {
+  constructor(options: IKoaServerInitOptions) {
     super(options);
 
     this._playersDAO = new PlayersDAO();

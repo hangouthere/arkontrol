@@ -1,19 +1,19 @@
 import jwt from 'jsonwebtoken';
 import { Context } from 'koa';
 import Router from 'koa-router';
+import { IKoaServerInitOptions } from '..';
 import UserDAO from '../../../database/dao/UserDAO';
 import { JWT_SECRET } from '../middleware/Auth';
-import BaseRoute, { IRouteInitOptions } from './base';
+import BaseRoute from './base';
 
 class AuthRoutes extends BaseRoute {
-  private _router!: Router;
   private _userDAO!: UserDAO;
 
   get routes() {
     return this._router.routes();
   }
 
-  constructor(options: IRouteInitOptions) {
+  constructor(options: IKoaServerInitOptions) {
     super(options);
 
     this._router = new Router();

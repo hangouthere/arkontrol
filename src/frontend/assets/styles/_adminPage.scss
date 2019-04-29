@@ -1,3 +1,14 @@
+%actions {
+  padding: 5px;
+  border: 2px solid rgba(0, 238, 255, 0.3);
+  background: linear-gradient(
+    to bottom,
+    rgba(29, 48, 54, 0.6) 0%,
+    rgba(40, 58, 66, 0.3) 18%,
+    rgba(18, 30, 34, 0.6) 88%
+  );
+}
+
 #AdminPage {
   section {
     & > *:not(:last-child) {
@@ -72,14 +83,7 @@
     flex-direction: column;
 
     .actions {
-      padding: 5px;
-      border: 2px solid rgba(0, 238, 255, 0.3);
-      background: linear-gradient(
-        to bottom,
-        rgba(29, 48, 54, 0.6) 0%,
-        rgba(40, 58, 66, 0.3) 18%,
-        rgba(18, 30, 34, 0.6) 88%
-      );
+      @extend %actions;
     }
 
     .entries {
@@ -92,6 +96,57 @@
   }
 }
 
+#LogPage {
+  height: 100%;
+
+  .actions {
+    @extend %actions;
+
+    .logType {
+      font-size: 150%;
+      text-transform: capitalize;
+    }
+  }
+
+  .logData {
+    height: 100%;
+    overflow-y: auto;
+
+    .dayContainer {
+      &:not(:last-child) {
+        margin-bottom: 5px;
+      }
+
+      .timestamp {
+        min-width: 80px;
+      }
+
+      .dayHeader {
+        padding: 5px;
+        font-size: 150%;
+
+        background: linear-gradient(
+          to bottom,
+          rgba(29, 48, 54, 0.3) 0%,
+          rgba(59, 87, 99, 0.3) 18%,
+          rgba(18, 30, 34, 0.3) 88%
+        );
+      }
+
+      .bp3-collapse-body {
+        padding: 10px;
+        background: linear-gradient(
+          to bottom,
+          rgba(0, 0, 0, 0.6) 0%,
+          rgba(29, 48, 54, 0.3) 10px,
+          rgba(18, 30, 34, 0.8) 88%
+        );
+      }
+    }
+  }
+}
+
+// Global style for react-sortable-hoc appended class
 .commandEntry-drag {
   opacity: 0.5;
   background: linear-gradient(

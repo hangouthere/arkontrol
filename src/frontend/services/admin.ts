@@ -1,6 +1,7 @@
 import { IArkCommandEntry } from '../store/reducers/arkCommands';
 import { IAuthConfig } from '../store/reducers/authConfig';
 import BaseService from './base';
+import { ILogData } from '../store/reducers/log';
 
 class AdminService extends BaseService {
   async getAuthConfig(): Promise<IAuthConfig> {
@@ -29,6 +30,13 @@ class AdminService extends BaseService {
       .url('admin/commands')
       .put(commands)
       .json(j => j.config);
+  }
+
+  async getLogData(logType: string): Promise<ILogData> {
+    return await this._baseUrl
+      .url(`admin/log/${logType}`)
+      .get()
+      .json(j => j.logData);
   }
 }
 
