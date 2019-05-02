@@ -77,7 +77,7 @@ class SocketService {
   }
 
   async sendArkCommand(msg: string) {
-    await this._ws.send(`arkCommand::${msg}`);
+    await this._ws.send(`rconCommand::${msg}`);
 
     ShowToaster({
       message: 'Ark Command Sent',

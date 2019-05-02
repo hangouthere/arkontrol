@@ -1,204 +1,182 @@
-import { Rcon } from 'rcon-client';
-import { debounce } from '../../commonUtil';
-import DiscordWebhook from '../DiscordWebhook';
+import Rcon from 'rcon-ts';
 import LoggerConfig from '../util/LoggerConfig';
-import MessagingBus, { EventMessages } from '../util/MessagingBus';
-import RCONConfig from './RCONConfig';
+import { EventMessages } from '../util/MessagingBus';
+import { IRCONHelperInitOptions } from './RCONManager';
 
 const Logger = {
   debug: LoggerConfig.instance.getLogger(),
+  commands: LoggerConfig.instance.getLogger('commands'),
   server: LoggerConfig.instance.getLogger('server'),
   presence: LoggerConfig.instance.getLogger('presence')
 };
 
-interface IRCONClientInitOptions {
-  messagingBus: MessagingBus;
-}
-
-export interface IRCONHelperInitOptions {
-  messagingBus: MessagingBus;
-  client: RCONClient;
+export interface IRCONExecOptions {
+  skipLogging?: boolean;
+  skipRetry?: boolean;
 }
 
 export default class RCONClient {
-  private _messagingBus: MessagingBus;
-  private _config: RCONConfig;
-  private _serverWasDown!: boolean;
-  private _instance!: Rcon;
-  private _connectionAttempts: number = 0;
-  private _timeouts: number = 0;
-  private _discordWH!: DiscordWebhook;
-  private _onDidDisconnectDebounce: () => void;
+  private _serverIsAccessible!: boolean;
+  private _hasErrorState: boolean = false;
 
-  get instance() {
-    return this._instance;
+  get serverIsAccessible() {
+    return this._serverIsAccessible;
   }
 
-  get isAuthenticated() {
-    return this.instance.authenticated;
+  get statusLabel() {
+    return this._serverIsAccessible ? 'Online' : 'Offline';
   }
 
-  private get _reachedMaxAttempts() {
-    return this._connectionAttempts >= Number(this._config.authConfig.maxConnectionAttempts.propValue);
-  }
+  constructor(private _options: IRCONHelperInitOptions) {}
 
-  constructor(options: IRCONClientInitOptions) {
-    // rcon-client throws an uncaught exception for some reason... Catch here and handle it!
-    process.on('uncaughtException', this._detectUndesiredDisconnection);
+  private async _markServerStatus(isUp: boolean) {
+    this._options.messagingBus.emit(EventMessages.RCON.SetStatus, isUp);
 
-    this._messagingBus = options.messagingBus;
-    this._config = new RCONConfig();
-
-    this._onDidDisconnectDebounce = debounce(this._onDidDisconnect, 1000);
-
-    this._instance = new Rcon({
-      packetResponseTimeout: 10000
-    });
-
-    this._instance.onDidDisconnect(this._onDidDisconnectDebounce);
-  }
-
-  private _onDidDisconnect = () => {
-    if (false === this._reachedMaxAttempts) {
-      Logger.server.warn('RCON Server disconnected, trying to reconnect...');
-      this.connect();
-    }
-  }
-
-  private async _markServerStatus(isUp: boolean, instant: boolean = false) {
-    const maxConnAttempts = Number(this._config.authConfig.maxConnectionAttempts.propValue);
-
-    // Mark as DOWN!
-    if (false === isUp) {
-      if (false === instant) {
-        Logger.server.error(`RCON reached maximum connection retries (${maxConnAttempts}), giving up.`);
-      }
-
-      this._connectionAttempts = maxConnAttempts;
-    } else {
-      this._connectionAttempts = 0;
-      this._timeouts = 0;
+    // Server status hasn't changed, break out!
+    if (isUp === this._serverIsAccessible) {
+      return undefined;
     }
 
-    this._messagingBus.emit(EventMessages.RCON.ConnectionChange, isUp);
+    this._serverIsAccessible = isUp;
+    this._options.config.saveServerStatus(isUp);
 
-    // Server status changed, alert Discord!
-    if (isUp === this._serverWasDown && this._discordWH) {
-      await this._discordWH.send(isUp);
-    }
+    this._options.messagingBus.emit(EventMessages.RCON.ConnectionChange, isUp);
 
-    this._serverWasDown = !isUp;
-    this._config.saveServerStatus(isUp);
+    return undefined;
   }
 
-  private _detectUndesiredDisconnection = async (err: Error) => {
+  async init() {
+    await this._options.config.reload();
+
+    this._serverIsAccessible = '1' === this._options.config.appState.serverIsAccessible;
+
+    // Run simple test to see if server is accessible
+    await this._testConnect();
+  }
+
+  private _evaluateError = async (err: any, options: IRCONExecOptions = {}, cmd?: string) => {
+    // TODO: See if this is the right thing to do....
+    // It might be skipping errors completley somehow?
+    if (true === this._hasErrorState) {
+      return true;
+    }
+
+    this._hasErrorState = true;
+
     const badEndpoint =
-      err.message.includes('getaddrinfo ENOTFOUND') ||
-      err.message.includes('connect ECONNREFUSED') ||
-      err.message.includes('connect ETIMEDOUT');
+      !!err.innerException &&
+      (err.innerException.message.includes('getaddrinfo ENOTFOUND') ||
+        err.innerException.message.includes('connect ECONNREFUSED') ||
+        err.innerException.message.includes('connect ETIMEDOUT'));
 
-    if (badEndpoint) {
+    if (true === badEndpoint && true === this.serverIsAccessible) {
+      Logger.server.error('[RCON] Connection has failed, this may be due to a server crash.');
+
+      this._markServerStatus(false);
+
+      return true;
+    }
+
+    if (true === badEndpoint) {
       Logger.server.error(
-        'RCON Could not connect to specified host/port combination.\n' +
-          'Please make sure:\n' +
+        '[RCON] Error while connecting, could not connect to specified host/port combination.\n' +
+          'Please ensure:\n' +
           '\t1) The server is up\n' +
           '\t2) You have RCON enabled on the server\n' +
           '\t3) The Auth Config is set correctly.'
       );
 
-      this._markServerStatus(false, true);
-      return;
+      this._markServerStatus(false);
+
+      return true;
+    }
+
+    if (!!err.innerException && 'Authentication failed.' === err.innerException.message) {
+      Logger.server.error('[RCON] Supplied Password is invalid, please check your configuration!');
+
+      this._markServerStatus(false);
+
+      return true;
     }
 
     if (err.message.includes('read ECONNRESET')) {
-      Logger.server.error('RCON Disconnect from Server');
+      Logger.server.error('[RCON] Server Reset the connection!');
 
-      if (true === this._reachedMaxAttempts) {
-        this._markServerStatus(false);
-        return;
+      this._markServerStatus(false);
+
+      return true;
+    }
+
+    const reqTimedOut =
+      true === err.message.includes('Request timed out') ||
+      true === err.innerException.message.includes('Request timed out');
+
+    if (reqTimedOut) {
+      if (!!cmd) {
+        if (true === options.skipRetry) {
+          Logger.server.warn(`[RCON] Command timed out, skipping re-attempt: ${cmd}`);
+        } else {
+          Logger.server.warn(`[RCON] Command timed out, re-attempting: ${cmd}`);
+
+          this.execCommand(cmd, options);
+        }
+      } else {
+        Logger.server.warn(`[RCON] Unknown Command timed out`);
       }
 
-      return this.connect();
+      return true;
     }
 
-    // TODO: Consider catchall here? Somewhere else? Crash?
-    return;
+    Logger.debug.error('[RCON] !!!! Unknown error: ', err);
+
+    return false;
   }
 
-  async init() {
-    await this.forceReconnect();
-  }
-
-  forceReconnect = async () => {
-    if (this._instance) {
-      this._instance.disconnect();
-    }
-
-    await this._config.initAuth();
-
-    this._connectionAttempts = 0;
-    this._timeouts = 0;
-    this._serverWasDown = '1' === this._config.appState.serverWasDown;
-
-    if (this._config.authConfig.discordWebhookURL.propValue) {
-      this._discordWH = new DiscordWebhook({
-        webhookUrl: this._config.authConfig.discordWebhookURL.propValue,
-        adminName: this._config.authConfig.discordAdminName.propValue
-      });
-    }
-
-    return this.connect();
-  }
-
-  async connect(): Promise<Rcon> {
+  private async _testConnect() {
     try {
-      this._connectionAttempts++;
+      const instance = new Rcon(this._options.config.connectData);
 
-      Logger.server.info(
-        `RCON Attempt connection (${this._connectionAttempts}/${
-          this._config.authConfig.maxConnectionAttempts.propValue
-        }) to ${this._config.socketAddress}...`
-      );
-
-      await this._instance.connect(this._config.connectData);
+      // Send a bogus command to test connection
+      await instance.session(async c => await c.send('ping'));
 
       this._markServerStatus(true);
-
-      Logger.server.info('RCON Server successfully connected!');
     } catch (err) {
-      if ('Authentication failed: wrong password' === err.message) {
-        Logger.server.error('Supplied RCON Password is invalid, please check your configuration!');
-
-        await this._markServerStatus(false, true);
-      }
-
-      const timedout = this.markPossibleTimeout(err, 'Authentication');
-
-      if (timedout) {
-        await this.connect();
-      }
-    } finally {
-      return this._instance;
+      this._evaluateError(err, { skipRetry: true }, 'Test Connection');
     }
   }
 
-  markPossibleTimeout(err: Error, type: string) {
-    let wasTimeout = false;
-    const maxPacketTimeouts = Number(this._config.authConfig.maxPacketTimeouts.propValue);
+  async execCommand(cmd: string, options: IRCONExecOptions = {}) {
+    const opts = {
+      skipLogging: false,
+      skipRetry: false,
+      ...options
+    };
 
-    if (true === err.message.includes('Response timeout for packet id')) {
-      this._timeouts++;
-      wasTimeout = true;
+    process.off('uncaughtException', this._evaluateError);
+    process.once('uncaughtException', this._evaluateError);
 
-      Logger.debug.warn(`Timeout when performing (${this._timeouts}/${maxPacketTimeouts}): ${type}`);
+    try {
+      // Certain circumstances we don't want logging
+      // (ie, Status/Ping checks)
+      if (false === opts.skipLogging) {
+        Logger.commands.info(`[RCON]: Exec ${cmd}`);
+      }
+
+      const instance = new Rcon(this._options.config.connectData);
+      const response = await instance.session(async c => await c.send(cmd));
+
+      this._hasErrorState = false;
+
+      return response;
+    } catch (err) {
+      const handled = await this._evaluateError(err, options, cmd);
+
+      if (false === handled) {
+        throw err;
+      }
+
+      return 'err';
     }
-
-    if (this._timeouts >= maxPacketTimeouts) {
-      Logger.server.warn(`Maximum timeouts reached (${maxPacketTimeouts}), forcing a reconnect...`);
-      this.forceReconnect();
-    }
-
-    return wasTimeout;
   }
 }
 

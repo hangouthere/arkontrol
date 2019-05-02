@@ -21,7 +21,7 @@ const Navigation: React.FC<IProps> = props => {
       <Navbar.Group>
         <Navbar.Heading className="navbar-heading">ArKontrol</Navbar.Heading>
         <Navbar.Divider />
-        <NavButton icon="user" text="Players" to="/" exact={true} className="bp3-minimal" />
+        <NavButton icon="people" text="Players" to="/" exact={true} className="bp3-minimal" />
 
         {adminButtons}
       </Navbar.Group>

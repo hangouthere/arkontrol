@@ -46,7 +46,7 @@ export default class KoaServer {
 
     this._httpServer.listen(options.port);
 
-    Logger.info(`Server Listening on http://localhost:${options.port}`);
-    Logger.info(`Serving Static files from ${options.publicPath}`);
+    Logger.info(`[WebServer] Listening on http://localhost:${options.port}`);
+    Logger.info(`[WebServer] Serving Static files from ${options.publicPath}`);
   }
 }

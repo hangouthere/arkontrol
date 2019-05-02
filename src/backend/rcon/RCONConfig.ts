@@ -28,13 +28,23 @@ class RCONConfig {
     } = this.authConfig;
 
     return {
-      host: host,
+      host,
       port: Number(port),
-      password: password
+      password,
+      timeout: 10 * 1000
     };
   }
 
-  async initAuth() {
+  async init() {
+    return this.reload();
+  }
+
+  reload = async () => {
+    await this._initAuth();
+    await this._initCommands();
+  }
+
+  async _initAuth() {
     this._appStateDao = new AppStateDAO();
     const authConfigDAO = new AuthConfigDAO();
 
@@ -45,7 +55,7 @@ class RCONConfig {
     this.authConfig = AuthConfig.fromDAO(configEntries).config;
   }
 
-  async initCommands() {
+  async _initCommands() {
     const arkCommandsDAO = new ArkCommandsDAO();
     const arkCommands = await arkCommandsDAO.getCommands();
     this.arkCommands = new ArkCommands(arkCommands).list;
@@ -53,8 +63,15 @@ class RCONConfig {
 
   async saveServerStatus(isUp: boolean) {
     return this._appStateDao.saveStatePart({
-      propName: 'serverWasDown',
-      propValue: isUp ? '0' : '1'
+      propName: 'serverIsAccessible',
+      propValue: isUp ? '1' : '0'
+    });
+  }
+
+  async saveCommandIndex(idx: number) {
+    return this._appStateDao.saveStatePart({
+      propName: 'currentCommandIndex',
+      propValue: idx.toString()
     });
   }
 }

@@ -1,47 +1,71 @@
+import { EventEmitter } from 'events';
 import { PromiseDelayCancellable } from '../../commonUtil';
 import { IArkCommandEntry } from '../database/models/ArkCommands';
-import LoggerConfig from '../util/LoggerConfig';
-import MessagingBus, { EventMessages } from '../util/MessagingBus';
-import RCONClient, { IRCONHelperInitOptions } from './RCONClient';
-import RCONConfig from './RCONConfig';
+import RCONClient from './RCONClient';
+import { EventMessages } from '../util/MessagingBus';
 
-const Logger = LoggerConfig.instance.getLogger('commands');
+type CommandList = Array<IArkCommandEntry>;
 
-export default class RCONCommandList {
-  private _config: RCONConfig;
-  private _messagingBus: MessagingBus;
-  private _client: RCONClient;
-  private _commandList!: Array<IArkCommandEntry>;
-  private _currentCommand?: IArkCommandEntry;
-  private _waitTimeout!: Function | undefined;
+export default class RCONCommandList extends EventEmitter {
+  protected _client: RCONClient;
+  protected _waitTimeout!: Function | undefined;
+  protected _commandList: CommandList = [];
+  protected _currentCommandIndex = 0;
+  protected _enabled = true;
 
-  constructor(options: IRCONHelperInitOptions) {
-    this._client = options.client;
-    this._messagingBus = options.messagingBus;
-
-    this._config = new RCONConfig();
-
-    this._messagingBus.on(EventMessages.RCON.CommandsChange, this._onCommandChange);
-
-    this._client.instance.onDidAuthenticate(this._processCurrentCommand);
-    this._client.instance.onDidDisconnect(this._cancelAndStop);
+  private get _reachedMaxCommands() {
+    return this._currentCommandIndex >= this._commandList.length;
   }
 
-  init = async () => {
-    await this._config.initCommands();
+  set commandList(list: CommandList) {
+    this._commandList = list;
 
-    // Used to actually operate on throughout lifecycle
-    this._commandList = [...this._config.arkCommands];
+    if (this._enabled) {
+      this._onCommandChange();
+    }
+  }
 
-    if (true === this._client.isAuthenticated) {
+  constructor(client: RCONClient) {
+    super();
+
+    this._client = client;
+  }
+
+  async init() {
+    return this._startCommands();
+  }
+
+  stop() {
+    this._enabled = false;
+    this._stopCommands();
+  }
+
+  async _startCommands() {
+    this._loadCommands();
+  }
+
+  _stopCommands() {
+    this._cancelAndStop();
+  }
+
+  async _onCommandChange() {
+    this._stopCommands();
+    await this._restartCommands();
+    this._startCommands();
+  }
+
+  _loadCommands(idx?: number) {
+    this._currentCommandIndex = idx || 0;
+
+    // Only process if we have commands to begin with
+    if (0 < this._commandList.length) {
       this._processNextCommand();
     }
   }
 
-  _onCommandChange = () => {
-    Logger.info('[CmdList] Change detected, restarting commands...');
-    this._cancelAndStop();
-    this.init();
+  async _restartCommands() {
+    // Restart the Command Index
+    this._currentCommandIndex = 0;
   }
 
   _cancelAndStop = () => {
@@ -51,77 +75,67 @@ export default class RCONCommandList {
     }
   }
 
-  _processNextCommand = async (): Promise<any> => {
-    // Start list over when we've reached the end
-    if (0 === this._commandList.length) {
-      return setTimeout(this.init, 0);
+  _processNextCommand = async () => {
+    if (false === this._enabled) {
+      return undefined;
     }
 
-    this._currentCommand = this._commandList.shift();
+    // Start list over when we've reached the end
+    if (true === this._reachedMaxCommands) {
+      await this._restartCommands();
+
+      // Use setTimeout to avoid max call stack issues over time
+      setTimeout(() => {
+        this._loadCommands();
+        this.emit(EventMessages.RCON.CommandsEnd);
+      }, 0);
+
+      return undefined;
+    }
 
     return this._processCurrentCommand();
   }
 
-  _processCurrentCommand = async (): Promise<any> => {
+  async _processCurrentCommand(): Promise<any> {
+    const currCommand = this._commandList[this._currentCommandIndex];
+
     this._cancelAndStop();
 
-    // We don't have a current command, so get one and process it
-    if (!this._currentCommand) {
-      return this._processNextCommand();
-    }
-
-    Logger.info('[CmdList] Exec:', this._currentCommand.command);
-
     try {
-      let result = await this._execCurrentCommand(this._currentCommand.command);
-      result = result.replace(/\s?\n\s?$/, ''); // Remove trailing newline
-
-      Logger.info('[CmdList] Result:', result);
-
-      return this._processNextCommand();
+      await this._execCurrentCommand(currCommand.command);
     } catch (err) {
-      // noop cancelled promises, as there's nothing to do
-      if (err.message === 'Cancelled Promise') {
+      if (true === err.message.includes('Cancelled Promise')) {
         return undefined;
       }
 
-      // Check for timeout
-      const wasTimeout = this._client.markPossibleTimeout(
-        err,
-        '[CmdList] ' + this._currentCommand.command.split(' ')[0]
-      );
-
-      // Retry if timed out
-      if (wasTimeout) {
-        return this._processCurrentCommand();
-      }
-
-      Logger.error('[CmdList] Unknown Error:', err);
-
-      return undefined;
+      throw err;
     }
+
+    this._currentCommandIndex++;
+
+    return this._processNextCommand();
   }
 
   async _execCurrentCommand(currCommand: string): Promise<string> {
     if (0 === currCommand.indexOf('wait')) {
-      return this._waitCommand(currCommand);
+      await this._waitCommand(currCommand);
+      return 'Wait Completed';
     }
 
-    const response = await this._client.instance.send(currCommand);
-
-    return response;
+    return await this._client.execCommand(currCommand, {
+      skipLogging: true,
+      skipRetry: true
+    });
   }
 
   async _waitCommand(waitCommand: string) {
     const [, delayStr] = waitCommand.split(' ');
-    const delay = parseInt(delayStr) || 1000;
+    const delay = Number(delayStr) || 1000;
 
     const [delayPromise, cancel] = PromiseDelayCancellable(delay * 1000);
 
     this._waitTimeout = cancel as Function;
     await delayPromise;
-    this._waitTimeout = undefined;
-
-    return 'Wait Completed';
+    this._cancelAndStop();
   }
 }

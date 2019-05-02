@@ -2,9 +2,7 @@ import 'source-map-support/register';
 
 import fetch from 'node-fetch';
 import Database from './database';
-import RCONClient, { IRCONHelperInitOptions } from './rcon/RCONClient';
-import RCONCommandList from './rcon/RCONCommandList';
-import RCONStatus from './rcon/RCONStatus';
+import RCONManager from './rcon/RCONManager';
 import KoaServer from './servers/webserver';
 import WebSocketServer from './servers/WebSocketServer';
 import SocketMessageProxy from './SocketMessageProxy';
@@ -18,8 +16,8 @@ class BackendApp {
   private _koaServer!: KoaServer;
   private _socketServer!: WebSocketServer;
   private _socketProxy!: SocketMessageProxy;
-  private _rconClient!: RCONClient;
   private _messagingBus!: MessagingBus;
+  private _rconMgr!: RCONManager;
 
   constructor() {
     console.log(`Node Version: ${process.versions.node}`);
@@ -34,7 +32,7 @@ class BackendApp {
 
     this.initWebServer();
     this.initSocketServer();
-    this.initRCONClient();
+    this.initRCONManager();
     this.initSocketRCONProxy();
   }
 
@@ -54,29 +52,18 @@ class BackendApp {
     });
   }
 
-  async initRCONClient() {
-    this._rconClient = new RCONClient({
+  async initRCONManager() {
+    this._rconMgr = new RCONManager({
       messagingBus: this._messagingBus
     });
 
-    await this._rconClient.init();
-
-    const rconHelperInitOptions: IRCONHelperInitOptions = {
-      messagingBus: this._messagingBus,
-      client: this._rconClient
-    };
-
-    const rconCmdList = new RCONCommandList(rconHelperInitOptions);
-    const rconStatus = new RCONStatus(rconHelperInitOptions);
-
-    await rconCmdList.init();
-    await rconStatus.init();
+    await this._rconMgr.init();
   }
 
   initSocketRCONProxy() {
     this._socketProxy = new SocketMessageProxy({
       messagingBus: this._messagingBus,
-      rconClient: this._rconClient,
+      rconMgr: this._rconMgr,
       socketServer: this._socketServer
     });
 

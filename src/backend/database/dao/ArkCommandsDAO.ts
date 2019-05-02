@@ -3,7 +3,7 @@ import { IArkCommandEntry } from '../models/ArkCommands';
 
 class ArkCommandsDAO extends BaseDAO {
   async getCommands() {
-    return await this._db.all("SELECT * FROM Commands ORDER BY 'order' ASC");
+    return await this._db.all(`SELECT * FROM Commands ORDER BY "order" ASC`);
   }
 
   async saveCommands(commands: Array<IArkCommandEntry>) {

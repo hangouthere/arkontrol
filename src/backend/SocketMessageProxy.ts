@@ -1,6 +1,7 @@
 import WebSocket from 'ws';
-import { debounce, PromiseDelay } from '../commonUtil';
-import RCONClient from './rcon/RCONClient';
+import DiscordWebhook from './DiscordWebhook';
+import RCONCommandShutdown from './rcon/RCONCommandShutdown';
+import RCONManager from './rcon/RCONManager';
 import WebSocketServer from './servers/WebSocketServer';
 import LoggerConfig from './util/LoggerConfig';
 import MessagingBus, { EventMessages } from './util/MessagingBus';
@@ -10,41 +11,36 @@ const Logger = {
   commands: LoggerConfig.instance.getLogger('commands')
 };
 
-const ID_ARK_COMMAND = 'arkCommand::';
+const ID_RCON_COMMAND = 'rconCommand::';
 const ID_SYS_COMMAND = 'sysCommand::';
 
 interface ISocketMessageProxyInitOptions {
+  rconMgr: RCONManager;
   socketServer: WebSocketServer;
-  rconClient: RCONClient;
   messagingBus: MessagingBus;
 }
 
 export default class SocketMessageProxy {
-  private _webSocketServer: WebSocketServer;
-  private _rconClient: RCONClient;
-  private _messagingBus: MessagingBus;
-  private _reconnectDebounce!: Function;
-
-  constructor(options: ISocketMessageProxyInitOptions) {
-    this._webSocketServer = options.socketServer;
-    this._rconClient = options.rconClient;
-    this._messagingBus = options.messagingBus;
-  }
+  constructor(private _options: ISocketMessageProxyInitOptions) {}
 
   init() {
-    this._messagingBus.on(EventMessages.Socket.Message, this._consumeMessage);
-    this._messagingBus.on(EventMessages.RCON.ConnectionChange, this._updateStatus);
-
-    // Debounce reconnect to avoid RCON kerfuffle
-    // For some reason it likes to send back "keepalive"
-    // on auth when reconnected too fast, and too frequent
-    this._reconnectDebounce = debounce(this._rconClient.forceReconnect, 500);
+    this._options.messagingBus.on(EventMessages.Socket.Message, this._consumeMessage);
+    this._options.messagingBus.on(EventMessages.RCON.ConnectionChange, this._onConnectionChange);
   }
 
-  _updateStatus = (isConnected: boolean) => {
-    Logger.server.info(`Alerting clients of Status Change: ${isConnected}`);
+  _onConnectionChange = (isConnected: boolean) => {
+    this._updateSocketClients(isConnected);
+    this._updateDiscord(isConnected);
+  }
 
-    this._webSocketServer.instance.clients.forEach(client => {
+  _updateSocketClients(isConnected: boolean) {
+    if (0 < this._options.socketServer.instance.clients.size) {
+      Logger.server.info(
+        `[SysProxy] Alerting Socket Clients of Status Change: ${this._options.rconMgr.state.client.statusLabel}`
+      );
+    }
+
+    this._options.socketServer.instance.clients.forEach(client => {
       client.send(
         JSON.stringify({
           type: EventMessages.RCON.ConnectionChange,
@@ -54,60 +50,60 @@ export default class SocketMessageProxy {
     });
   }
 
+  async _updateDiscord(isConnected: boolean) {
+    const { discordWebhookURL, discordAdminName } = this._options.rconMgr.state.config.authConfig;
+
+    if (discordWebhookURL.propValue) {
+      Logger.server.info(
+        `[SysProxy] Alerting Discord of Status Change: ${this._options.rconMgr.state.client.statusLabel}`
+      );
+
+      const dwh = new DiscordWebhook({
+        webhookUrl: discordWebhookURL.propValue,
+        adminName: discordAdminName.propValue
+      });
+
+      await dwh.send(isConnected);
+    }
+  }
+
   _consumeMessage = (data: WebSocket.Data, _socket: WebSocket) => {
     const message = data as string;
 
-    if (0 === message.indexOf(ID_ARK_COMMAND)) {
-      return this._proxyRCONCommand(message.replace(ID_ARK_COMMAND, ''));
+    if (0 === message.indexOf(ID_RCON_COMMAND)) {
+      return this._proxyRCONCommand(message.replace(ID_RCON_COMMAND, ''));
     }
 
     if (0 === message.indexOf(ID_SYS_COMMAND)) {
       return this._proxySysCommand(message.replace(ID_SYS_COMMAND, ''));
     }
 
-    Logger.commands.warn(`[UICmd] Unsupported Message Recieved: "${message}"`);
+    Logger.commands.warn(`[MsgProxy] Unsupported Message Recieved: "${message}"`);
 
     return Promise.resolve();
   }
 
   async _proxyRCONCommand(command: string) {
-    Logger.commands.info(`[UIArkCmd] Exec: ${command}`);
+    Logger.commands.info(`[MsgProxy] RCON Exec: ${command}`);
 
-    try {
-      await this._rconClient.instance.send(command);
-    } catch (err) {
-      this._rconClient.markPossibleTimeout(err, `UICmd: ${command.split(' ')[0]}`);
-    }
+    await this._options.rconMgr.state.client.execCommand(command);
   }
 
   async _proxySysCommand(command: string) {
-    Logger.commands.info(`[UISysCmd] Exec: ${command}`);
+    Logger.commands.info(`[MsgProxy] Sys Exec: ${command}`);
 
     switch (command) {
       case 'reconnect':
-        this._reconnectDebounce();
+        this._options.rconMgr.state.client.init();
         break;
       case 'shutdown':
-        const WARN_1 =
-          '' +
-          'broadcast System will be <RichColor Color="1, 0, 0, 1">shutting down</> in ' +
-          '<RichColor Color="1, 1, 0, 1">5 minutes</>, please get somewhere safe!';
+        this._options.rconMgr.stop();
 
-        const WARN_2 =
-          '' +
-          'broadcast System will be <RichColor Color="1, 0, 0, 1">shutting down</> in ' +
-          '<RichColor Color="1, 1, 0, 1">1 minute</>, please get somewhere safe NOW!';
-
-        const WARN_3 = 'broadcast System is <RichColor Color="1, 0, 0, 1">SHUTTING DOWN NOW</>...';
-
-        await this._rconClient.instance.send(WARN_1);
-        await PromiseDelay(4 * 60 * 1000);
-        await this._rconClient.instance.send(WARN_2);
-        await PromiseDelay(1 * 60 * 1000);
-        await this._rconClient.instance.send(WARN_3);
-        await this._rconClient.instance.send('SaveWorld');
-        await PromiseDelay(10 * 1000);
-        await this._rconClient.instance.send('DoExit');
+        const cmdList = new RCONCommandShutdown(this._options.rconMgr.state.client);
+        cmdList.init();
+        cmdList.once(EventMessages.RCON.CommandsEnd, () => {
+          cmdList.stop();
+        });
         break;
     }
   }

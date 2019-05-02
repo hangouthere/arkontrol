@@ -1,3 +1,23 @@
+div::-webkit-scrollbar {
+  width: 12px;
+}
+div::-webkit-scrollbar-track {
+  border-radius: 10px;
+  background: rgba(18, 30, 34, 0.3);
+  border: 2px solid rgba(59, 87, 99, 0.1);
+}
+div::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: rgba(18, 30, 34, 0.3);
+  border: 1px solid rgba(0, 238, 255, 0.3);
+}
+div::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to left, rgba(0, 238, 255, 0.4), rgba(0, 238, 255, 0.8));
+}
+div::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(to left, rgba(0, 154, 165, 0.4), rgba(0, 154, 165, 0.8));
+}
+
 body,
 html {
   height: 100%;

@@ -1,7 +1,7 @@
 import { IArkCommandEntry } from '../store/reducers/arkCommands';
 import { IAuthConfig } from '../store/reducers/authConfig';
-import BaseService from './base';
 import { ILogData } from '../store/reducers/log';
+import BaseService from './base';
 
 class AdminService extends BaseService {
   async getAuthConfig(): Promise<IAuthConfig> {

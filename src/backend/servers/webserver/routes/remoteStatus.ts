@@ -18,7 +18,7 @@ class RemoteStatusRoutes extends BaseRoute {
 
     this._router.get('/remoteStatus', this.getStatus);
 
-    this._messagingBus.on(EventMessages.RCON.ConnectionChange, this._updateStatus);
+    this._messagingBus.on(EventMessages.RCON.SetStatus, this._updateStatus);
   }
 
   _updateStatus = (isUp: boolean) => {

@@ -1,11 +1,11 @@
 import PlayersDAO from '../database/dao/PlayersDAO';
 import Player from '../database/models/Player';
 import LoggerConfig from '../util/LoggerConfig';
-import RCONClient, { IRCONHelperInitOptions } from './RCONClient';
-import MessagingBus from '../util/MessagingBus';
+import { EventMessages } from '../util/MessagingBus';
+import { IRCONHelperInitOptions } from './RCONManager';
 
 const CHAT_BUFFER_FREQ = 10 * 1000;
-const USER_LIST_UPDATE_FREQ = 3 * 1000;
+const USER_LIST_UPDATE_FREQ = 30 * 1000;
 
 const Logger = {
   console: LoggerConfig.instance.getLogger(),
@@ -14,70 +14,90 @@ const Logger = {
 };
 
 export default class RCONStatus {
-  private _client: RCONClient;
-  private _messagingBus: MessagingBus;
   private _interval: Array<NodeJS.Timeout> = [];
   private _dao!: PlayersDAO;
 
-  constructor(options: IRCONHelperInitOptions) {
-    this._client = options.client;
-    this._messagingBus = options.messagingBus;
+  constructor(private _options: IRCONHelperInitOptions) {
     this._dao = new PlayersDAO();
-
-    this._client.instance.onDidAuthenticate(this._startIntervals);
-    this._client.instance.onDidDisconnect(this._stopIntervals);
   }
 
-  async init() {
-    if (true === this._client.isAuthenticated) {
-      this._startIntervals();
+  init() {
+    this._options.messagingBus.on(EventMessages.RCON.ConnectionChange, this._onConnectionChange);
+
+    if (true === this._options.client.serverIsAccessible) {
+      this._startStatus();
     }
   }
 
-  _stopIntervals = () => {
+  stop() {
+    this._stopStatus();
+  }
+
+  _onConnectionChange = (isUp: boolean) => {
+    return isUp ? this._startStatus() : this._stopStatus();
+  }
+
+  async _stopStatus() {
+    Logger.console.info('[RCONStatus] Stopping Status Collection...');
+
+    this._clearIntervals();
+
+    await this._markPlayersOffline();
+  }
+
+  _startStatus() {
+    Logger.console.info('[RCONStatus] Starting Status Collection...');
+
+    this._clearIntervals();
+
+    const int1 = setInterval(this.getChat, CHAT_BUFFER_FREQ);
+    const int2 = setInterval(this.getUsers, USER_LIST_UPDATE_FREQ);
+    this._interval.push(int1, int2);
+
+    this.getChat();
+    this.getUsers();
+  }
+
+  _clearIntervals() {
     this._interval.forEach(i => clearInterval(i));
     this._interval = [];
   }
 
-  _startIntervals = () => {
-    this._stopIntervals();
-    const int1 = setInterval(this.getChat, CHAT_BUFFER_FREQ);
-    const int2 = setInterval(this.getUsers, USER_LIST_UPDATE_FREQ);
-
-    this._interval.push(int1, int2);
+  async _markPlayersOffline() {
+    await this._updatePresence([]);
+    await this._dao.setAllPlayersOffline();
   }
 
   getChat = async () => {
     try {
-      let response = await this._client.instance.send('getchat');
+      let response = await this._options.client.execCommand('getchat', { skipLogging: true });
       response = response.replace(/\n?\s?\n\s?$/, '');
 
       // Skip bogus responses...
-      if ('Server received, But no response!!' === response) {
-        return;
+      if ('Server received, But no response!!' !== response) {
+        Logger.chat.info(response);
       }
-
-      Logger.chat.info(response);
     } catch (err) {
-      this._client.markPossibleTimeout(err, 'getchat');
+      //noop
     }
   }
 
   getUsers = async () => {
+    let response = '';
+
     try {
-      let response = await this._client.instance.send('listplayers');
+      response = await this._options.client.execCommand('listplayers', { skipLogging: true });
 
       // Skip bogus responses...
       if (true === response.includes('No Players Connected')) {
-        await this._updatePresence([]);
-        await this._dao.setAllPlayersOffline();
+        await this._markPlayersOffline();
         return;
       }
 
       let newUserList = Player.fromRCON(response);
       await this._updatePresence(newUserList);
     } catch (err) {
-      this._client.markPossibleTimeout(err, 'listplayers');
+      //noop
     }
   }
 

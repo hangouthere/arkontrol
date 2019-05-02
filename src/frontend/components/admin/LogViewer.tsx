@@ -1,4 +1,4 @@
-import { Button, HTMLSelect, Icon, Intent, NonIdealState, Spinner, Collapse } from '@blueprintjs/core';
+import { Button, Collapse, Icon, Intent, NonIdealState, Spinner, Tooltip } from '@blueprintjs/core';
 import React from 'react';
 import { ILogView, ILogViewData } from '../../containers/admin/LogPage';
 
@@ -63,8 +63,8 @@ class LogViewer extends React.PureComponent<IProps, IState> {
   _buildLogEntries(logData: Array<ILogViewData>) {
     return logData.map(dayData => {
       const dayEntries = dayData.data.map((entry, idx) => (
-        <div key={idx} className={`logLevel-${entry.logLevel} flex-display space-elements-horizontal`}>
-          <Icon icon={IconMap[entry.logLevel]} intent={IntentMap[entry.logLevel]} />
+        <div key={idx} className={`logLevel logLevel-${entry.logLevel} flex-display space-elements-horizontal`}>
+          <Icon icon={IconMap[entry.logLevel]} intent={IntentMap[entry.logLevel]} iconSize={12} />
           <div className="timestamp">{new Date(entry.timestamp).toLocaleTimeString()}</div>
           <div className="data" dangerouslySetInnerHTML={{ __html: entry.data.replace(/\n/g, '<br />') }} />
         </div>
@@ -95,8 +95,8 @@ class LogViewer extends React.PureComponent<IProps, IState> {
     return LogDisplay;
   }
 
-  _onChangeLogType = (event: React.FormEvent<HTMLSelectElement>) => {
-    this.props.changeLogType(event.currentTarget.value);
+  _onChangeLogType = (logType: string) => () => {
+    this.props.changeLogType(logType);
     this.setState({
       openState: {}
     });
@@ -109,14 +109,46 @@ class LogViewer extends React.PureComponent<IProps, IState> {
           <form className="flex-display flex-align space-elements-horizontal">
             <div className="logType flex-grow">{this.props.logType}</div>
 
-            <HTMLSelect name="logType" onChange={this._onChangeLogType} defaultValue={this.props.logType}>
-              <option value="chat">Chat</option>
-              <option value="commands">Commands</option>
-              <option value="presence">Presence</option>
-              <option value="server">Server</option>
-            </HTMLSelect>
+            <Tooltip>
+              <Button
+                icon="chat"
+                onClick={this._onChangeLogType('chat')}
+                intent={this.props.logType === 'chat' ? Intent.PRIMARY : Intent.NONE}
+              />
+              Chat Log
+            </Tooltip>
 
-            <Button icon="refresh" onClick={this.props.refreshLogData} />
+            <Tooltip>
+              <Button
+                icon="people"
+                onClick={this._onChangeLogType('presence')}
+                intent={this.props.logType === 'presence' ? Intent.PRIMARY : Intent.NONE}
+              />
+              Presence Log
+            </Tooltip>
+
+            <Tooltip>
+              <Button
+                icon="console"
+                onClick={this._onChangeLogType('commands')}
+                intent={this.props.logType === 'commands' ? Intent.PRIMARY : Intent.NONE}
+              />
+              Command Log
+            </Tooltip>
+
+            <Tooltip>
+              <Button
+                icon="cell-tower"
+                onClick={this._onChangeLogType('server')}
+                intent={this.props.logType === 'server' ? Intent.PRIMARY : Intent.NONE}
+              />
+              Server Log
+            </Tooltip>
+
+            <Tooltip>
+              <Button icon="refresh" onClick={this.props.refreshLogData} minimal={true} />
+              Reload Log Data
+            </Tooltip>
           </form>
         </div>
 

@@ -58,7 +58,7 @@ VALUES
 
 INSERT INTO AppState (propName, propValue)
 VALUES 
-  ('serverWasDown', '0'),
+  ('serverIsAccessible', '0'),
   ('currentCommandIndex', '0');
 
 -- Down
