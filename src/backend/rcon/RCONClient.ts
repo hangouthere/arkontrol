@@ -175,7 +175,7 @@ export default class RCONClient {
         throw err;
       }
 
-      return 'err';
+      return err;
     }
   }
 }

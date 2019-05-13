@@ -144,3 +144,23 @@ body {
     }
   }
 }
+
+.error-panel {
+  margin-bottom: 10px;
+}
+
+.gravatar {
+  &-icon {
+    border-radius: 25%;
+
+    &.gravatar-help {
+      cursor: help;
+    }
+  }
+}
+
+.bp3-menu {
+  strong {
+    color: white;
+  }
+}

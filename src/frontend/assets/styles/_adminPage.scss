@@ -166,3 +166,26 @@
     width: 90px;
   }
 }
+
+// Global style for Admin Menu
+.AdminMenu {
+  .gravatar {
+    &-icon {
+      height: 36px;
+    }
+  }
+}
+
+.editProfile {
+  .gravatar {
+    &-icon {
+      height: 64px;
+      width: 64px;
+      margin-bottom: 10px;
+    }
+  }
+
+  .column-left {
+    width: 180px;
+  }
+}

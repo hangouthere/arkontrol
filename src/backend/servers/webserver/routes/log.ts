@@ -1,7 +1,7 @@
 import { Context } from 'koa';
 import Router from 'koa-router';
 import { IKoaServerInitOptions } from '..';
-import { hasAnyRole, JTWVerify } from '../middleware/Auth';
+import { hasAnyRoleMiddleware, JTWVerify } from '../middleware/Auth';
 import BaseRoute from './base';
 import path from 'path';
 import fs from 'fs-extra';
@@ -16,7 +16,7 @@ class LogRoutes extends BaseRoute {
 
     this._router = new Router({ prefix: '/admin' });
 
-    this._router.get('/log/:type', JTWVerify, hasAnyRole(['superadmin', 'admin']), this.getLog);
+    this._router.get('/log/:type', JTWVerify, hasAnyRoleMiddleware(['superadmin', 'admin']), this.getLog);
   }
 
   getLog = async (ctx: Context) => {

@@ -2,6 +2,7 @@ import { IArkCommandEntry } from '../store/reducers/arkCommands';
 import { IAuthConfig } from '../store/reducers/authConfig';
 import { ILogData } from '../store/reducers/log';
 import BaseService from './base';
+import { IUser } from './auth';
 
 class AdminService extends BaseService {
   async getAuthConfig(): Promise<IAuthConfig> {
@@ -37,6 +38,18 @@ class AdminService extends BaseService {
       .url(`admin/log/${logType}`)
       .get()
       .json(j => j.logData);
+  }
+
+  async saveProfile(user: IUser): Promise<IUser | undefined> {
+    const token = await this._baseUrl
+      .url(`admin/profile/${user.id}`)
+      .put(user)
+      .json(j => j.token);
+
+    BaseService.token = token;
+    localStorage.setItem('_token', token);
+
+    return this.currentUser;
   }
 }
 

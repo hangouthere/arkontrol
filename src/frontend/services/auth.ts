@@ -6,13 +6,18 @@ export interface IAuthRequest {
 }
 
 export interface IUser extends IAuthRequest {
-  exp: number;
-  role: string;
+  exp: number; //JWT Expiration Date
+  id: number;
+  roles: Array<string>;
   lastLogin: string;
+  displayName?: string;
+  email?: string;
+  oldPassword?: string;
+  newPassword?: string;
 }
 
 class AuthService extends BaseService {
-  async login(loginInfo?: IAuthRequest) {
+  async login(loginInfo?: IAuthRequest): Promise<IUser | undefined> {
     if (!loginInfo) {
       return undefined;
     }
@@ -23,7 +28,6 @@ class AuthService extends BaseService {
       .json(j => j.token);
 
     BaseService.token = token;
-
     localStorage.setItem('_token', token);
 
     return this.currentUser;

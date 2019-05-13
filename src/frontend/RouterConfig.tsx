@@ -30,9 +30,9 @@ const RouterConfig: React.FC = () => (
       <Route path="/" exact={true} component={PlayerListPage} />
       <Route path="/login" component={LoginPage} />
       <Route path="/logout" component={Logout} />
-      <Route path="/adminPanel" component={ProtectedAdminPanel} />
-      <Route path="/serverConfig" component={ProtectedServerConfigPage} />
-      <Route path="/logs" component={ProtectedLogPage} />
+      <Route path="/admin/adminPanel" component={ProtectedAdminPanel} />
+      <Route path="/admin/serverConfig" component={ProtectedServerConfigPage} />
+      <Route path="/admin/logs" component={ProtectedLogPage} />
       <Route component={FourOhFour} />
     </Switch>
   </Layout>

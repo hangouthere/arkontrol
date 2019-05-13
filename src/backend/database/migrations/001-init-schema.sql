@@ -5,6 +5,8 @@ CREATE TABLE Users (
   userName TEXT NOT NULL UNIQUE,
   password TEXT NOT NULL,
   roles TEXT NOT NULL,
+  displayName TEXT,
+  email TEXT,
   lastLogin TEXT
 );
 CREATE TABLE Players (
@@ -31,10 +33,11 @@ CREATE TABLE AppState (
   propValue TEXT NOT NULL
 );
 
-INSERT INTO Users (userName, roles, password)
+INSERT INTO Users (userName, displayName, roles, password)
 VALUES
   (
     'admin',
+    'Admin',
     'superadmin ,admin',
     '5ea985b7d8d896931ea774e17fe8c69a67f49202'
   );

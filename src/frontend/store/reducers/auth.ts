@@ -1,6 +1,7 @@
 import typeToReducer from 'type-to-reducer';
 import AuthService, { IUser } from '../../services/auth';
 import { AuthActionTypes } from '../actions/auth';
+import { ProfileActionTypes } from '../actions/profile';
 
 export interface IAuthState {
   redirectAfterAuth: string;
@@ -47,7 +48,20 @@ export const AuthReducers = typeToReducer(
     [AuthActionTypes.LOGOUT]: () => ({
       ...INITIAL_STATE,
       user: undefined
-    })
+    }),
+
+    // Derived from ProfileActions
+    [ProfileActionTypes.SAVE_PROFILE]: {
+      // We only care when fulfilled
+      FULFILLED: (state, action) => {
+        return {
+          ...state,
+          loading: false,
+          error: undefined,
+          user: action.payload
+        };
+      }
+    }
   },
 
   INITIAL_STATE

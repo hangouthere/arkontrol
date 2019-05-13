@@ -68,7 +68,7 @@ class PlayerMessages extends React.PureComponent<IProps, IState> {
   _sendMessage = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const userName = this.props.user ? this.props.user.userName : 'Admin User';
+    const userName = this.props.user!.displayName || this.props.user!.userName;
 
     switch (this.state.chatType) {
       case 'broadcast':

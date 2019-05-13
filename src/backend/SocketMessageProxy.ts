@@ -86,7 +86,9 @@ export default class SocketMessageProxy {
   async _proxyRCONCommand(command: string) {
     Logger.commands.info(`[MsgProxy] RCON Exec: ${command}`);
 
-    await this._options.rconMgr.state.client.execCommand(command);
+    await this._options.rconMgr.state.client.execCommand(command, {
+      skipLogging: true
+    });
   }
 
   async _proxySysCommand(command: string) {

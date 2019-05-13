@@ -1,18 +1,33 @@
-import { Alignment, Navbar } from '@blueprintjs/core';
+import { Alignment, Navbar, Tooltip } from '@blueprintjs/core';
 import React from 'react';
 import { connect } from 'react-redux';
 import { IRootState } from '../../store/reducers';
 import { IAuthState } from '../../store/reducers/auth';
 import { NavButton } from './NavButton';
+import AdminMenu from '../admin/AdminMenu';
 
-interface IProps extends IAuthState, React.ButtonHTMLAttributes<HTMLButtonElement> {}
+const LoginButton: React.FC<IAuthState> = props => (
+  <Tooltip>
+    <NavButton
+      icon="log-in"
+      to="/login"
+      exact={true}
+      className="bp3-minimal"
+      intent={props.loading ? 'warning' : 'none'}
+    />
+    Log In as Admin
+  </Tooltip>
+);
 
-const Navigation: React.FC<IProps> = props => {
+const Navigation: React.FC<IAuthState> = props => {
+  const LoginStatusDisplay = !props.user ? LoginButton : AdminMenu;
+
+  // TODO: Role checks!
   const adminButtons = !props.user ? null : (
     <React.Fragment>
-      <NavButton icon="crown" text="Admin Panel" to="/adminPanel" exact={true} className="bp3-minimal" />
-      <NavButton icon="document" text="Logs" to="/logs" exact={true} className="bp3-minimal" />
-      <NavButton icon="badge" text="Server Config" to="/serverConfig" exact={true} className="bp3-minimal" />
+      <NavButton icon="crown" text="Admin Panel" to="/admin/adminPanel" exact={true} className="bp3-minimal" />
+      <NavButton icon="document" text="Logs" to="/admin/logs" exact={true} className="bp3-minimal" />
+      <NavButton icon="badge" text="Server Config" to="/admin/serverConfig" exact={true} className="bp3-minimal" />
     </React.Fragment>
   );
 
@@ -27,13 +42,7 @@ const Navigation: React.FC<IProps> = props => {
       </Navbar.Group>
 
       <Navbar.Group align={Alignment.RIGHT}>
-        <NavButton
-          icon={props.user ? 'log-out' : 'log-in'}
-          to={props.user ? '/logout' : '/login'}
-          exact={true}
-          className="bp3-minimal"
-          intent={props.user ? (props.loading ? 'warning' : 'danger') : 'success'}
-        />
+        <LoginStatusDisplay {...props} />
       </Navbar.Group>
     </Navbar>
   );

@@ -1,4 +1,5 @@
 import { combineReducers, Reducer } from 'redux';
+import { ProfileReducers, IProfileState } from './profile';
 import { ArkCommandsReducers, IArkCommandsState } from './arkCommands';
 import { AuthReducers, IAuthState } from './auth';
 import { AuthConfigReducers, IAuthConfigState } from './authConfig';
@@ -8,10 +9,11 @@ import { IRemoteStatusState, RemoteStatusReducers } from './remoteStatus';
 
 export interface IRootState {
   ArkCommands: IArkCommandsState;
-  AuthConfig: IAuthConfigState;
   Auth: IAuthState;
+  AuthConfig: IAuthConfigState;
   Log: ILogState;
   Players: IPlayersState;
+  Profile: IProfileState;
   RemoteStatus: IRemoteStatusState;
 }
 
@@ -25,6 +27,7 @@ export default class RootReducerCreator {
       AuthConfig: AuthConfigReducers,
       Log: LogReducers,
       Players: PlayersReducers,
+      Profile: ProfileReducers,
       RemoteStatus: RemoteStatusReducers
     });
   }

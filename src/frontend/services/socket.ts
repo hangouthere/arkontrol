@@ -1,8 +1,13 @@
-import ReduxStore from '../store';
-import { RemoteStatusActions } from '../store/actions/remoteStatus';
+import { EventEmitter } from 'events';
 import { ShowToaster } from './toaster';
 
-class SocketService {
+export const EVENTS = {
+  CONNECTED: 'socket::CONNECTED',
+  DISCONNECTED: 'socket::DISCONNECTED',
+  MESSAGE_RECIEVED: 'socket::MESSAGE_RECIEVED'
+};
+
+class SocketService extends EventEmitter {
   private _ws!: WebSocket;
   private _hasBeenWarned = false;
 
@@ -11,6 +16,7 @@ class SocketService {
   }
 
   constructor() {
+    super();
     this._connect();
   }
 
@@ -40,30 +46,26 @@ class SocketService {
 
   _socketConnected = (_event: Event) => {
     this._hasBeenWarned = false;
-    ReduxStore.store.dispatch(RemoteStatusActions.setBotStatus(true));
+
+    this.emit(EVENTS.CONNECTED);
 
     ShowToaster({
       message: 'Connected to Bot!',
       intent: 'success'
     });
-
-    setTimeout(() => {
-      // Kick off getting status
-      ReduxStore.store.dispatch(RemoteStatusActions.getServerStatus());
-    }, 1000);
   }
 
   _socketMessageRecieved = (event: MessageEvent) => {
     try {
-      ReduxStore.store.dispatch(JSON.parse(event.data));
+      const messageData = JSON.parse(event.data);
+      this.emit(EVENTS.MESSAGE_RECIEVED, messageData);
     } catch (err) {
       console.log(`WS Unknown Message Recieved: ${event.data}`);
     }
   }
 
   _socketDisconnected = (_event: CloseEvent) => {
-    ReduxStore.store.dispatch(RemoteStatusActions.setBotStatus(false));
-    ReduxStore.store.dispatch(RemoteStatusActions.setServerStatus(false));
+    this.emit(EVENTS.DISCONNECTED);
 
     if (false === this._hasBeenWarned) {
       this._hasBeenWarned = true;

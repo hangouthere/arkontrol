@@ -31,6 +31,7 @@ const CommonConfig = {
   },
   plugins: [
     // Define Plugins
+    Plugins.CircularDepChecker,
     Plugins.TSTypeChecker,
     Plugins.DefineConstants,
     Plugins.ExtractCSS

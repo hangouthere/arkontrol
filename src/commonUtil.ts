@@ -25,3 +25,11 @@ export const debounce = (func: Function, delay: number, ctx?: Function) => {
     return () => clearTimeout(debounceTimer);
   };
 };
+
+export function hasAnyRole(reqRoles: Array<string>, userRoles: Array<string>) {
+  return reqRoles.some(r => userRoles.includes(r));
+}
+
+export function hasRole(role: string, userRoles: Array<string>) {
+  return hasAnyRole([role], userRoles);
+}

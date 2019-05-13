@@ -110,6 +110,12 @@ class LoggerConfig {
     return this._instance;
   }
 
+  get allLoggers() {
+    const catNames = Object.keys(Log4JSConfig.categories);
+
+    return catNames.map(this.instance.getLogger);
+  }
+
   constructor() {
     this._instance = log4js.configure(Log4JSConfig);
   }

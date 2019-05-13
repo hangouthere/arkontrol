@@ -7,6 +7,7 @@ import KoaServer from './servers/webserver';
 import WebSocketServer from './servers/WebSocketServer';
 import SocketMessageProxy from './SocketMessageProxy';
 import MessagingBus from './util/MessagingBus';
+import LoggerConfig from './util/LoggerConfig';
 
 (global as any).fetch = fetch;
 
@@ -21,6 +22,8 @@ class BackendApp {
 
   constructor() {
     console.log(`Node Version: ${process.versions.node}`);
+
+    LoggerConfig.allLoggers.map(l => l.info('-- ArKontrol Start -------------------------------'));
 
     this.init();
   }

@@ -5,6 +5,7 @@ const HtmlWebpackIncludeAssetsPlugin = require('html-webpack-include-assets-plug
 const MiniCSSExtractPlugin = require('mini-css-extract-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
+const CircularDependencyPlugin = require('circular-dependency-plugin');
 
 const {
   isHot,
@@ -111,7 +112,12 @@ const TSTypeChecker = new ForkTsCheckerWebpackPlugin({
   tslint: true
 });
 
+const CircularDepChecker = new CircularDependencyPlugin({
+  exclude: /node_modules/
+});
+
 module.exports = {
+  CircularDepChecker,
   CopyConnectionsFile,
   CopyDBMigrations,
   DefineConstants,

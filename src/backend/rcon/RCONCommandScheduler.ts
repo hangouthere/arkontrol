@@ -73,7 +73,8 @@ export default class RCONCommandScheduler extends RCONCommandList {
     }
 
     return await this._client.execCommand(currCommand, {
-      skipRetry: true
+      skipRetry: true,
+      skipLogging: true
     });
   }
 }
