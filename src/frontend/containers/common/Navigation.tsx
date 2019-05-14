@@ -5,6 +5,7 @@ import { IRootState } from '../../store/reducers';
 import { IAuthState } from '../../store/reducers/auth';
 import { NavButton } from './NavButton';
 import AdminMenu from '../admin/AdminMenu';
+import { hasRole } from '../../../commonUtil';
 
 const LoginButton: React.FC<IAuthState> = props => (
   <Tooltip>
@@ -22,14 +23,19 @@ const LoginButton: React.FC<IAuthState> = props => (
 const Navigation: React.FC<IAuthState> = props => {
   const LoginStatusDisplay = !props.user ? LoginButton : AdminMenu;
 
-  // TODO: Role checks!
   const adminButtons = !props.user ? null : (
     <React.Fragment>
       <NavButton icon="crown" text="Admin Panel" to="/admin/adminPanel" exact={true} className="bp3-minimal" />
-      <NavButton icon="document" text="Logs" to="/admin/logs" exact={true} className="bp3-minimal" />
-      <NavButton icon="badge" text="Server Config" to="/admin/serverConfig" exact={true} className="bp3-minimal" />
     </React.Fragment>
   );
+
+  const superButtons =
+    !props.user || false === hasRole('superadmin', props.user!.roles) ? null : (
+      <React.Fragment>
+        <NavButton icon="document" text="Logs" to="/admin/logs" exact={true} className="bp3-minimal" />
+        <NavButton icon="badge" text="Server Config" to="/admin/serverConfig" exact={true} className="bp3-minimal" />
+      </React.Fragment>
+    );
 
   return (
     <Navbar className="Navbar">
@@ -39,6 +45,7 @@ const Navigation: React.FC<IAuthState> = props => {
         <NavButton icon="people" text="Players" to="/" exact={true} className="bp3-minimal" />
 
         {adminButtons}
+        {superButtons}
       </Navbar.Group>
 
       <Navbar.Group align={Alignment.RIGHT}>

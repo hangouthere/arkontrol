@@ -50,7 +50,13 @@ class UserDAO extends BaseDAO {
   }
 
   async getById(id: number) {
-    return await this._db.get('SELECT * FROM Users WHERE id = ?', id);
+    const user = await this._db.get('SELECT * FROM Users WHERE id = ?', id);
+
+    if (user.roles) {
+      user.roles = user.roles.split(/\s?,\s?/);
+    }
+
+    return user;
   }
 
   async saveUser(userInfo: IUser) {
