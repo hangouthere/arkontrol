@@ -20,7 +20,7 @@
     "no-var-keyword": true,
     "one-line": [true, "check-else", "check-whitespace", "check-open-brace"],
     "quotemark": [true, "single", "avoid-escape", "jsx-double"],
-    "semicolon": [true, "always"],
+    "semicolon": [true, "always", "ignore-bound-class-methods"],
     "trailing-comma": false
   }
 }

@@ -14,18 +14,22 @@ class UserDAO extends BaseDAO {
       .digest('hex');
   }
 
+  hydrateRoles(user: IUser) {
+    if (user.roles && 'string' === typeof user.roles) {
+      user.roles = (user.roles as string).split(/\s?,\s?/);
+    }
+  }
+
   async validateUser(authRequest: IAuthRequest): Promise<IUser | undefined> {
     try {
       const user = await this._db.get(
         'SELECT * FROM Users WHERE userName = ? AND password = ?',
-        authRequest.userName,
+        authRequest.userName.toLowerCase(),
         this._getSaltedHash(authRequest.password)
       );
 
       if (user) {
-        if (user.roles) {
-          user.roles = user.roles.split(/\s?,\s?/);
-        }
+        this.hydrateRoles(user);
 
         const now = new Date().toISOString();
 
@@ -40,33 +44,42 @@ class UserDAO extends BaseDAO {
     }
   }
 
-  async createUser(userName: string, passwd: string, role: string = 'admin') {
-    await this._db.run(
-      'INSERT INTO Users (userName, password, role) VALUES (?, ?, ?)',
-      userName,
-      this._getSaltedHash(passwd),
-      role
+  async createUser(user: IUser) {
+    return await this._db.run(
+      'INSERT INTO Users (displayName, userName, email, password, roles) VALUES (?, ?, ?, ?, ?)',
+      user.displayName,
+      user.userName.toLowerCase(),
+      user.email,
+      this._getSaltedHash(user.newPassword!),
+      user.roles.sort().join(', ')
     );
   }
 
   async getById(id: number) {
     const user = await this._db.get('SELECT * FROM Users WHERE id = ?', id);
 
-    if (user.roles) {
-      user.roles = user.roles.split(/\s?,\s?/);
-    }
+    this.hydrateRoles(user);
 
     return user;
   }
 
-  async saveUser(userInfo: IUser) {
-    await this._db.run(
-      'UPDATE Users SET displayName = ?, email = ?, roles = ? WHERE id = ?',
-      userInfo.displayName,
-      userInfo.email,
-      userInfo.roles.join(', '),
+  async getUsers() {
+    const users = await this._db.all('SELECT * FROM Users');
+
+    users.forEach((u: IUser) => this.hydrateRoles(u));
+
+    return users;
+  }
+
+  async saveUser(user: IUser) {
+    return await this._db.run(
+      'UPDATE Users SET displayName = ?, username = ?, email = ?, roles = ? WHERE id = ?',
+      user.displayName,
+      user.userName.toLowerCase(),
+      user.email,
+      user.roles.sort().join(', '),
       //
-      userInfo.id
+      user.id
     );
   }
 
@@ -111,12 +124,24 @@ class UserDAO extends BaseDAO {
     return isPassDiff;
   }
 
-  async saveUserPassword(userInfo: IUser) {
+  async saveUserPassword(user: IUser) {
     await this._db.run(
       'UPDATE Users SET password = ? WHERE id = ?',
-      this._getSaltedHash(userInfo.newPassword!),
+      this._getSaltedHash(user.newPassword!),
       //
-      userInfo.id
+      user.id
+    );
+  }
+
+  async getSuperCount() {
+    return this._db.get("SELECT COUNT(id) FROM Users WHERE roles LIKE '%superadmin%'");
+  }
+
+  async deleteUser(user: IUser) {
+    return await this._db.run(
+      'DELETE FROM Users WHERE id = ?',
+      //
+      user.id
     );
   }
 }

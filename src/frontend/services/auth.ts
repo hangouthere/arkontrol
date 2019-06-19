@@ -6,15 +6,23 @@ export interface IAuthRequest {
 }
 
 export interface IUser extends IAuthRequest {
-  exp: number; //JWT Expiration Date
-  id: number;
+  exp?: number; //JWT Expiration Date
+  id?: number;
   roles: Array<string>;
-  lastLogin: string;
+  lastLogin?: string;
   displayName?: string;
   email?: string;
   oldPassword?: string;
   newPassword?: string;
 }
+
+export const NormalizeUserName = (user: IUser) => {
+  if (!user) {
+    return 'No User';
+  }
+
+  return user.displayName ? `${user.displayName} (${user.userName})` : user.userName;
+};
 
 class AuthService extends BaseService {
   async login(loginInfo?: IAuthRequest): Promise<IUser | undefined> {

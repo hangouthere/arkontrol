@@ -10,7 +10,7 @@ import { IRootState } from '../store/reducers';
 import { IAuthState } from '../store/reducers/auth';
 
 interface IProps extends RouteComponentProps {
-  auth: IAuthState;
+  authState: IAuthState;
   login: typeof AuthActions.loginRequest;
   setRedirect: typeof AuthActions.setRedirect;
 }
@@ -25,7 +25,7 @@ class LoginPage extends React.PureComponent<IProps, IAuthRequest> {
     event.preventDefault();
 
     try {
-      const { redirectAfterAuth } = this.props.auth;
+      const { redirectAfterAuth } = this.props.authState;
 
       await this.props.login(this.state);
 
@@ -49,7 +49,7 @@ class LoginPage extends React.PureComponent<IProps, IAuthRequest> {
   }
 
   render() {
-    const { user, redirectAfterAuth } = this.props.auth;
+    const { user, redirectAfterAuth } = this.props.authState;
 
     if (user) {
       return <Redirect to={redirectAfterAuth} />;
@@ -60,7 +60,7 @@ class LoginPage extends React.PureComponent<IProps, IAuthRequest> {
         <h1>Login</h1>
 
         <LoginForm
-          auth={this.props.auth}
+          authState={this.props.authState}
           updateLoginHandler={this.updateLoginHandler}
           performLogin={this.performLogin}
         />
@@ -70,7 +70,7 @@ class LoginPage extends React.PureComponent<IProps, IAuthRequest> {
 }
 
 const mapStateToProps = (state: IRootState) => ({
-  auth: state.Auth
+  authState: state.Auth
 });
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({

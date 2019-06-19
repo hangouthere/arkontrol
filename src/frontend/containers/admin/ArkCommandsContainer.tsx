@@ -22,10 +22,10 @@ interface IState {
 
 class AuthConfigContainer extends React.PureComponent<IProps, IState> {
   componentDidMount() {
-    this._loadCommandList();
+    this._loadData();
   }
 
-  async _loadCommandList() {
+  async _loadData() {
     const { value: list } = await this.props.getCommands();
 
     this.setState({

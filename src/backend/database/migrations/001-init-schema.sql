@@ -55,9 +55,9 @@ VALUES
 INSERT INTO Commands ('order', command)
 VALUES 
   (1, 'broadcast <RichColor Color="0, 1, 0, 1">Congratulations!</> ArKontrol is operational!'),
-  (2, 'wait 10'),
+  (2, 'wait 60'),
   (3, 'broadcast <RichColor Color="0.95, 0.45, 0.2, 1">Now go forth</>, and configure your Commands to run when you want!'),
-  (4, 'wait 30');
+  (4, 'wait 60');
 
 INSERT INTO AppState (propName, propValue)
 VALUES 

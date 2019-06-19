@@ -9,14 +9,14 @@ import { IAuthState } from '../../store/reducers/auth';
 interface IProps extends RouteComponentProps {
   component: React.ComponentType<RouteComponentProps<any>> | React.ComponentType<any>;
   authPath: string;
-  authInfo: IAuthState;
+  authState: IAuthState;
   setRedirect: typeof AuthActions.setRedirect;
 }
 
 const ProtectedRoute: React.FC<IProps> = props => {
-  const { component, authPath, authInfo, location, setRedirect, ...rest } = props;
+  const { component, authPath, authState, location, setRedirect, ...rest } = props;
 
-  if (authInfo.user) {
+  if (authState.user) {
     return <Route {...rest} component={component} />;
   } else {
     setRedirect(location.pathname);
@@ -25,7 +25,7 @@ const ProtectedRoute: React.FC<IProps> = props => {
 };
 
 const mapStateToProps = (state: IRootState) => ({
-  authInfo: state.Auth
+  authState: state.Auth
 });
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({

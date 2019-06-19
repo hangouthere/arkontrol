@@ -43,8 +43,8 @@ class PlayerListContainer extends React.PureComponent<IProps> {
     };
 
     const hasPlayers = this.props.listData.players && 0 !== this.props.listData.players.length;
-    const adminPlayerList = <AdminPlayerList key="pl" playerData={this.props.listData} adminActions={adminActions} />;
-    const standardPlayerList = <PlayerList key="pl" playerData={this.props.listData} />;
+    const adminPlayerList = <AdminPlayerList key="pl" playerState={this.props.listData} adminActions={adminActions} />;
+    const standardPlayerList = <PlayerList key="pl" playerState={this.props.listData} />;
     const noPlayersDisplay = !hasPlayers ? (
       <NoPlayersDetected key="npd" refreshPlayers={this._getPlayers} />
     ) : (

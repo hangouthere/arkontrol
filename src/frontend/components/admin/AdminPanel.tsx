@@ -13,8 +13,8 @@ interface IProps {
 }
 
 const AdminPanel: React.FC<IProps> = props => (
-  <React.Fragment>
-    <section className="flex-display">
+  <div className="space-elements-vertical">
+    <section className="flex-display space-elements-horizontal">
       <div className="flex-display flex-column space-elements-vertical">
         <h3>Server Control</h3>
         <Button
@@ -82,7 +82,7 @@ const AdminPanel: React.FC<IProps> = props => (
         <Button text="Send Command" icon="comment" type="submit" />
       </form>
     </section>
-  </React.Fragment>
+  </div>
 );
 
 export default AdminPanel;

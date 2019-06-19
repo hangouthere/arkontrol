@@ -5,7 +5,7 @@ import { IPlayer } from '../../services/players';
 import { IPlayersState } from '../../store/reducers/players';
 
 interface IProps {
-  playerData: IPlayersState;
+  playerState: IPlayersState;
 }
 
 class PlayerList<P extends IProps> extends React.PureComponent<P> {
@@ -86,7 +86,7 @@ class PlayerList<P extends IProps> extends React.PureComponent<P> {
   }
 
   render() {
-    const players = this.props.playerData.players ? this._sortPlayerStatus(this.props.playerData.players) : [];
+    const players = this.props.playerState.players ? this._sortPlayerStatus(this.props.playerState.players) : [];
 
     return <React.Fragment>{this._buildPlayerTable(players)}</React.Fragment>;
   }

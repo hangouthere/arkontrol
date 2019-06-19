@@ -1,7 +1,7 @@
 import typeToReducer from 'type-to-reducer';
 import AuthService, { IUser } from '../../services/auth';
 import { AuthActionTypes } from '../actions/auth';
-import { ProfileActionTypes } from '../actions/profile';
+import { UsersActionTypes } from '../actions/usersCommands';
 
 export interface IAuthState {
   redirectAfterAuth: string;
@@ -51,9 +51,14 @@ export const AuthReducers = typeToReducer(
     }),
 
     // Derived from ProfileActions
-    [ProfileActionTypes.SAVE_PROFILE]: {
+    [UsersActionTypes.SAVE_USER]: {
       // We only care when fulfilled
       FULFILLED: (state, action) => {
+        // Only update if we're the logged in user
+        if (false === action.meta.isLoggedInUser) {
+          return state;
+        }
+
         return {
           ...state,
           loading: false,

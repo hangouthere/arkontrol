@@ -4,7 +4,7 @@ import { Dispatch } from 'redux';
 import LogViewer from '../../components/admin/LogViewer';
 import { LogActions } from '../../store/actions/log';
 import { IRootState } from '../../store/reducers';
-import { ILogState, ILogData } from '../../store/reducers/log';
+import { ILogData, ILogState } from '../../store/reducers/log';
 
 interface IProps {
   logInfo: ILogState;
@@ -32,19 +32,14 @@ class LogPage extends React.PureComponent<IProps, IState> {
   };
 
   componentDidMount() {
-    this.loadLogData();
+    this._loadData();
   }
 
   changeLogType = (logType: string) => {
-    this.setState(
-      {
-        logType
-      },
-      this.loadLogData
-    );
+    this.setState({ logType }, this._loadData);
   }
 
-  loadLogData = () => {
+  _loadData = () => {
     this.props.getLogData(this.state.logType);
   }
 
@@ -84,7 +79,7 @@ class LogPage extends React.PureComponent<IProps, IState> {
         <LogViewer
           logType={this.state.logType}
           changeLogType={this.changeLogType}
-          refreshLogData={this.loadLogData}
+          refreshLogData={this._loadData}
           logInfo={this.logData()}
         />
       </div>

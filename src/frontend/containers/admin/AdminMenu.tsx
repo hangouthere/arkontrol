@@ -5,17 +5,17 @@ import { RouteComponentProps, withRouter } from 'react-router';
 import { Dispatch } from 'redux';
 import ProfileEditor from '../../components/admin/ProfileEditor';
 import { IUser } from '../../services/auth';
-import { ProfileActions } from '../../store/actions/profile';
 import { IRootState } from '../../store/reducers';
 import { IAuthState } from '../../store/reducers/auth';
-import { IProfileState } from '../../store/reducers/profile';
 import Gravatar from './Gravatar';
+import { UsersActions, ISaveUserPayload } from '../../store/actions/usersCommands';
+import { IUsersState } from '../../store/reducers/usersCommands';
 
 interface IProps extends RouteComponentProps {
-  userInfo: IAuthState;
-  profileInfo: IProfileState;
-  saveProfile: typeof ProfileActions.saveProfile;
-  resetProfile: typeof ProfileActions.resetProfile;
+  authState: IAuthState;
+  usersState: IUsersState;
+  saveUser: typeof UsersActions.saveUser;
+  resetUser: typeof UsersActions.resetUser;
 }
 
 interface IState {
@@ -40,14 +40,14 @@ class AdminMenu extends React.PureComponent<IProps, IState> {
           };
         },
         // Callback after state set when CLOSING
-        false === isOpen ? this.props.resetProfile : undefined
+        false === isOpen ? this.props.resetUser : undefined
       );
     };
   }
 
   saveUserProfile = async (user: IUser) => {
     try {
-      await this.props.saveProfile(user);
+      await this.props.saveUser({ user, isLoggedInUser: true });
 
       // Force close
       this.toggleUserProfile(false)();
@@ -61,7 +61,7 @@ class AdminMenu extends React.PureComponent<IProps, IState> {
   }
 
   render() {
-    const user = this.props.userInfo.user!;
+    const user = this.props.authState.user!;
 
     return (
       <React.Fragment>
@@ -86,7 +86,7 @@ class AdminMenu extends React.PureComponent<IProps, IState> {
           isOpen={this.state.showProfileEditor}
           saveUserProfile={this.saveUserProfile}
           toggleUserProfile={this.toggleUserProfile}
-          profileInfo={this.props.profileInfo}
+          usersState={this.props.usersState}
           initialUser={user}
           isSelfUser={true}
         />
@@ -96,13 +96,13 @@ class AdminMenu extends React.PureComponent<IProps, IState> {
 }
 
 const mapStateToProps = (state: IRootState) => ({
-  userInfo: state.Auth,
-  profileInfo: state.Profile
+  authState: state.Auth,
+  usersState: state.Users
 });
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
-  saveProfile: (user?: IUser) => dispatch(ProfileActions.saveProfile(user)),
-  resetProfile: () => dispatch(ProfileActions.resetProfile())
+  saveUser: (payload?: ISaveUserPayload) => dispatch(UsersActions.saveUser(payload)),
+  resetUser: () => dispatch(UsersActions.resetUser())
 });
 
 export default withRouter(

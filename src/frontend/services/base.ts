@@ -26,7 +26,7 @@ class BaseService {
     BaseService.token = localStorage.getItem('_token');
 
     // Eval if token is expired
-    if (this.currentUser && this.currentUser.exp < new Date().getTime() / 1000) {
+    if (this.currentUser && this.currentUser.exp! < new Date().getTime() / 1000) {
       BaseService.token = null;
       localStorage.removeItem('_token');
     }

@@ -1,8 +1,9 @@
+import jwtDecode from 'jwt-decode';
 import { IArkCommandEntry } from '../store/reducers/arkCommands';
 import { IAuthConfig } from '../store/reducers/authConfig';
 import { ILogData } from '../store/reducers/log';
-import BaseService from './base';
 import { IUser } from './auth';
+import BaseService from './base';
 
 class AdminService extends BaseService {
   async getAuthConfig(): Promise<IAuthConfig> {
@@ -40,16 +41,32 @@ class AdminService extends BaseService {
       .json(j => j.logData);
   }
 
-  async saveProfile(user: IUser): Promise<IUser | undefined> {
-    const token = await this._baseUrl
-      .url(`admin/profile/${user.id}`)
-      .put(user)
-      .json(j => j.token);
+  async getUsers(): Promise<Array<IUser>> {
+    return await this._baseUrl
+      .url('admin/users')
+      .get()
+      .json(j => j.users);
+  }
 
-    BaseService.token = token;
-    localStorage.setItem('_token', token);
+  async saveUser(user: IUser, isLoggedInUser: boolean = false): Promise<IUser> {
+    let baseUrl = this._baseUrl.url('admin/users');
+    let savePromise = !user.id ? baseUrl.post(user) : baseUrl.url(`/${user.id}`).put(user);
 
-    return this.currentUser;
+    const token = await savePromise.json(j => j.token);
+
+    if (true === isLoggedInUser) {
+      BaseService.token = token;
+      localStorage.setItem('_token', token);
+    }
+
+    return jwtDecode(token);
+  }
+
+  async deleteUser(user: IUser): Promise<IUser> {
+    let baseUrl = this._baseUrl.url(`admin/users/${user.id}`);
+
+    await baseUrl.delete().res();
+    return user;
   }
 }
 

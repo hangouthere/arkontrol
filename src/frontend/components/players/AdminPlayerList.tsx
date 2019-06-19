@@ -7,7 +7,7 @@ import ConfirmAction from './ConfirmPlayerAction';
 import PlayerList from './PlayerList';
 
 interface IAdminProps {
-  playerData: IPlayersState;
+  playerState: IPlayersState;
   adminActions: {
     kickPlayer: (steamId: string) => void;
     banPlayer: (steamId: string) => void;
@@ -36,9 +36,6 @@ class AdminPlayerList extends PlayerList<IAdminProps> {
           </Tooltip>
           <ConfirmAction type="Ban" onClickConfirm={banPlayer} />
         </Popover>
-        <Tooltip content="Message Player">
-          <Button icon="chat" minimal={true} small={true} />
-        </Tooltip>
       </React.Fragment>
     );
 

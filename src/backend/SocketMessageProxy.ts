@@ -1,4 +1,6 @@
 import WebSocket from 'ws';
+import UserDAO from './database/dao/UserDAO';
+import { IAuthRequest, IUser } from './database/models/User';
 import DiscordWebhook from './DiscordWebhook';
 import RCONCommandShutdown from './rcon/RCONCommandShutdown';
 import RCONManager from './rcon/RCONManager';
@@ -11,6 +13,7 @@ const Logger = {
   commands: LoggerConfig.instance.getLogger('commands')
 };
 
+const ID_AUTH_COMMAND = 'authCommand::';
 const ID_RCON_COMMAND = 'rconCommand::';
 const ID_SYS_COMMAND = 'sysCommand::';
 
@@ -31,7 +34,7 @@ export default class SocketMessageProxy {
   _onConnectionChange = (isConnected: boolean) => {
     this._updateSocketClients(isConnected);
     this._updateDiscord(isConnected);
-  }
+  };
 
   _updateSocketClients(isConnected: boolean) {
     if (0 < this._options.socketServer.instance.clients.size) {
@@ -67,8 +70,19 @@ export default class SocketMessageProxy {
     }
   }
 
-  _consumeMessage = (data: WebSocket.Data, _socket: WebSocket) => {
+  _consumeMessage = (data: WebSocket.Data, socket: WebSocket) => {
     const message = data as string;
+    const user = (socket as any).user as IUser;
+
+    if (0 === message.indexOf(ID_AUTH_COMMAND)) {
+      return this._manageAuth(message.replace(ID_AUTH_COMMAND, ''), socket);
+    }
+
+    // TODO: Add auth checks
+    // if (!user) {
+    //   socket.send('authResponse::unauthorized');
+    //   return Promise.reject();
+    // }
 
     if (0 === message.indexOf(ID_RCON_COMMAND)) {
       return this._proxyRCONCommand(message.replace(ID_RCON_COMMAND, ''));
@@ -81,6 +95,22 @@ export default class SocketMessageProxy {
     Logger.commands.warn(`[MsgProxy] Unsupported Message Recieved: "${message}"`);
 
     return Promise.resolve();
+  };
+
+  async _manageAuth(authInfo: string, socket: WebSocket) {
+    const authSplit = authInfo.split(',');
+    const authObj: IAuthRequest = {
+      userName: authSplit[0],
+      password: authSplit[1]
+    };
+
+    try {
+      const userDao = new UserDAO();
+      const validatedUser = userDao.validateUser(authObj);
+      (socket as any).user = validatedUser;
+    } catch (err) {
+      socket.send('authResponse::error', err.message.toString());
+    }
   }
 
   async _proxyRCONCommand(command: string) {

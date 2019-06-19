@@ -10,7 +10,7 @@ import { IRootState } from '../../store/reducers';
 import { IAuthConfig, IAuthConfigState, IAuthConfigUpdateEntry } from '../../store/reducers/authConfig';
 
 interface IProps {
-  authConfigData: IAuthConfigState;
+  authConfigState: IAuthConfigState;
   getAuthConfig: typeof AuthConfigActions.getAuthConfig;
   saveAuthConfig: typeof AuthConfigActions.saveAuthConfig;
   sysCommand: typeof AdminActions.sysCommand;
@@ -24,10 +24,10 @@ interface IState {
 
 class AuthConfigContainer extends React.PureComponent<IProps, IState> {
   componentDidMount() {
-    this._loadConfig();
+    this._loadData();
   }
 
-  async _loadConfig() {
+  async _loadData() {
     const { value: authConfig } = await this.props.getAuthConfig();
 
     this.setState({
@@ -70,18 +70,18 @@ class AuthConfigContainer extends React.PureComponent<IProps, IState> {
   }
 
   render() {
-    const hasConfig = !!this.props.authConfigData.config;
+    const hasConfig = !!this.props.authConfigState.config;
 
     if (false === hasConfig) {
       return <Spinner />;
     }
 
-    const config = (this.state && this.state.config) || this.props.authConfigData.config;
+    const config = (this.state && this.state.config) || this.props.authConfigState.config;
 
     return (
       <AuthConfigPanel
         config={config}
-        isLoading={this.props.authConfigData.loading}
+        isLoading={this.props.authConfigState.loading}
         hasChange={this.state && this.state.hasChange}
         shouldReconnect={this.state && this.state.shouldReconnect}
         changeConfigPart={this.changeConfigPart}
@@ -93,7 +93,7 @@ class AuthConfigContainer extends React.PureComponent<IProps, IState> {
 }
 
 const mapStateToProps = (state: IRootState) => ({
-  authConfigData: state.AuthConfig
+  authConfigState: state.AuthConfig
 });
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({

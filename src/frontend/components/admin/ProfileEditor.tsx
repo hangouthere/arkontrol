@@ -2,24 +2,25 @@ import { Button, Callout, Classes, Dialog, FormGroup, InputGroup, Spinner, Tag }
 import React from 'react';
 import Gravatar from '../../containers/admin/Gravatar';
 import { IUser } from '../../services/auth';
-import { IProfileState } from '../../store/reducers/profile';
-import TagSelector, { ITagSelectItem } from '../common/TagSelector';
 import { ShowToaster } from '../../services/toaster';
+import { IUsersState } from '../../store/reducers/usersCommands';
+import TagSelector, { ITagSelectItem } from '../common/TagSelector';
+import { hasRole } from '../../../commonUtil';
 
 interface IProps {
-  isOpen: boolean;
-  title: string;
   initialUser: IUser;
-  profileInfo: IProfileState;
+  isOpen: boolean;
   isSelfUser: boolean;
+  title: string;
+  usersState: IUsersState;
   toggleUserProfile: (force?: boolean) => () => void;
   saveUserProfile: (user: IUser) => void;
 }
 
 interface IState {
   hasChanges: boolean;
+  userRoles: Array<ITagSelectItem>;
   user?: IUser;
-  selectedItems: Array<ITagSelectItem>;
 }
 
 const RoleTagSelectItems: Array<ITagSelectItem> = [
@@ -37,23 +38,31 @@ const RoleTagSelectItems: Array<ITagSelectItem> = [
   }
 ];
 
-class ProfileEditor extends React.PureComponent<IProps, IState> {
+class ProfileEditor extends React.Component<IProps, IState> {
   state: IState = {
     hasChanges: false,
-    user: undefined,
-    selectedItems: []
+    userRoles: [],
+    user: undefined
   };
 
   componentDidMount() {
     this._resetUser();
   }
 
+  componentDidUpdate(prevProps: IProps, _prevState: IState) {
+    const initUserChanged = this.props.initialUser !== prevProps.initialUser;
+
+    if (initUserChanged) {
+      this._resetUser();
+    }
+  }
+
   _resetUser() {
-    const roles = this._userRoles(this.state.user!);
+    const roles = this._userRoles(this.props.initialUser!);
 
     this.setState({
       user: this.props.initialUser,
-      selectedItems: roles
+      userRoles: roles
     });
   }
 
@@ -68,21 +77,25 @@ class ProfileEditor extends React.PureComponent<IProps, IState> {
         ...dataTuple
       } as Pick<IUser, keyof IUser>
     }));
-  }
+  };
 
   _saveUserProfile = async () => {
-    await this.props.saveUserProfile(this.state.user!);
+    try {
+      await this.props.saveUserProfile(this.state.user!);
 
-    ShowToaster({
-      message: 'Profile Saved',
-      intent: 'success'
-    });
-  }
+      ShowToaster({
+        message: 'Profile Saved',
+        intent: 'success'
+      });
+    } catch (err) {
+      //
+    }
+  };
 
   _cancelEdit = () => {
     this._resetUser();
     this.props.toggleUserProfile(false)();
-  }
+  };
 
   _userRoles = (user: IUser) => {
     let found;
@@ -100,7 +113,7 @@ class ProfileEditor extends React.PureComponent<IProps, IState> {
 
       return roles;
     }, []);
-  }
+  };
 
   _buildRoleView() {
     let view;
@@ -109,11 +122,7 @@ class ProfileEditor extends React.PureComponent<IProps, IState> {
       view = this.state.user!.roles.map(r => <Tag key={r}>{r}</Tag>);
     } else {
       view = (
-        <TagSelector
-          items={RoleTagSelectItems}
-          selectedItems={this.state.selectedItems}
-          onChange={this._onChangeRoles}
-        />
+        <TagSelector items={RoleTagSelectItems} selectedItems={this.state.userRoles} onChange={this._onChangeRoles} />
       );
     }
 
@@ -122,9 +131,9 @@ class ProfileEditor extends React.PureComponent<IProps, IState> {
 
   _buildProfileEditor() {
     const errorMessage =
-      this.props.profileInfo.error &&
-      this.props.profileInfo.error.message &&
-      this.props.profileInfo.error.message.toString();
+      this.props.usersState.error &&
+      this.props.usersState.error.message &&
+      this.props.usersState.error.message.toString();
 
     const errorDisplay = !!errorMessage ? (
       <Callout title="Error" intent="danger" className="error-panel">
@@ -133,6 +142,39 @@ class ProfileEditor extends React.PureComponent<IProps, IState> {
     ) : (
       undefined
     );
+
+    let oldPasswordEntry = (
+      <FormGroup label="Old Password" labelFor="oldPassword" key="oldPassword">
+        <InputGroup
+          id="oldPassword"
+          name="oldPassword"
+          type="password"
+          defaultValue={this.state.user!.oldPassword}
+          autoComplete="off"
+        />
+      </FormGroup>
+    );
+
+    const newPasswordEntry = (
+      <FormGroup label="New Password" labelFor="newPassword" key="newPassword">
+        <InputGroup
+          id="newPassword"
+          name="newPassword"
+          className="bp3-fill"
+          type="password"
+          defaultValue={this.state.user!.newPassword}
+          autoComplete="off"
+        />
+      </FormGroup>
+    );
+
+    const passwordEntryDisplay = [newPasswordEntry];
+
+    if (true === this.props.isSelfUser) {
+      passwordEntryDisplay.unshift(oldPasswordEntry);
+    }
+
+    const uid = this.props.initialUser.id + '' + this.state.user!.id;
 
     return (
       <React.Fragment>
@@ -148,8 +190,17 @@ class ProfileEditor extends React.PureComponent<IProps, IState> {
               <div className="roleDisplay space-elements-horizontal">{this._buildRoleView()}</div>
             </div>
 
-            <div className="flex-display flex-column flex-grow space-elements-vertical">
+            <div key={uid} className="flex-display flex-column flex-grow space-elements-vertical">
               <form onChange={this._updateProfile} className="flex-grow">
+                <FormGroup label="User Name" labelFor="userName">
+                  <InputGroup
+                    id="userName"
+                    name="userName"
+                    defaultValue={this.state.user!.userName}
+                    disabled={this.props.isSelfUser}
+                  />
+                </FormGroup>
+
                 <FormGroup label="Display Name" labelFor="displayName">
                   <InputGroup id="displayName" name="displayName" defaultValue={this.state.user!.displayName} />
                 </FormGroup>
@@ -158,24 +209,7 @@ class ProfileEditor extends React.PureComponent<IProps, IState> {
                   <InputGroup id="email" name="email" defaultValue={this.state.user!.email} />
                 </FormGroup>
 
-                <FormGroup label="Old Password" labelFor="oldPassword">
-                  <InputGroup
-                    id="oldPassword"
-                    name="oldPassword"
-                    type="password"
-                    defaultValue={this.state.user!.oldPassword}
-                  />
-                </FormGroup>
-
-                <FormGroup label="New Password" labelFor="newPassword">
-                  <InputGroup
-                    id="newPassword"
-                    name="newPassword"
-                    className="bp3-fill"
-                    type="password"
-                    defaultValue={this.state.user!.newPassword}
-                  />
-                </FormGroup>
+                {passwordEntryDisplay}
               </form>
             </div>
           </div>
@@ -203,7 +237,7 @@ class ProfileEditor extends React.PureComponent<IProps, IState> {
         roles: selectedRoles.map(r => r.tag)
       } as Pick<IUser, keyof IUser>
     }));
-  }
+  };
 
   render() {
     let content = <Spinner size={75} />;
@@ -214,7 +248,7 @@ class ProfileEditor extends React.PureComponent<IProps, IState> {
 
     return (
       <Dialog
-        className="bp3-dark editProfile"
+        className="ProfileEditor bp3-dark"
         isOpen={this.props.isOpen}
         title={this.props.title}
         icon="id-number"
