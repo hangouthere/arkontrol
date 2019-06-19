@@ -13,8 +13,6 @@ export interface IAuthConfig {
   host: IAuthConfigEntry;
   port: IAuthConfigEntry;
   password: IAuthConfigEntry;
-  maxConnectionAttempts: IAuthConfigEntry;
-  maxPacketTimeouts: IAuthConfigEntry;
   discordAdminName: IAuthConfigEntry;
   discordWebhookURL: IAuthConfigEntry;
 }

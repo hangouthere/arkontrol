@@ -20,7 +20,7 @@ CREATE TABLE AuthConfig (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   propName TEXT NOT NULL UNIQUE,
   propValue TEXT NOT NULL,
-  propDesc TEXT NOT NULL 
+  propDesc TEXT NOT NULL
 );
 CREATE TABLE Commands (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,24 +43,22 @@ VALUES
   );
 
 INSERT INTO AuthConfig (propName, propValue, propDesc)
-VALUES 
+VALUES
   ('host', 'localhost', 'Hostname that points to your Ark Server.'),
   ('port', '27015', 'Port that your Ark Server RCON has exposed.'),
   ('password', 'adminPassword', 'Password for your RCON authentication.'),
-  ('maxConnectionAttempts', '10', 'The number of times you want to retry connecting to the Server before giving up.'),
-  ('maxPacketTimeouts', '5', 'The number of times to fail (TTF) for commands.<br />System auto-reconnects when limit reached.'),
   ('discordWebhookURL', '', 'The Discord WebHook URL to post the Server Status.<br />Leave blank to disable Discord Webhook integration.'),
   ('discordAdminName', 'Your Server Admin', 'The Discord user responsible for the Server availability.');
 
 INSERT INTO Commands ('order', command)
-VALUES 
+VALUES
   (1, 'broadcast <RichColor Color="0, 1, 0, 1">Congratulations!</> ArKontrol is operational!'),
   (2, 'wait 60'),
   (3, 'broadcast <RichColor Color="0.95, 0.45, 0.2, 1">Now go forth</>, and configure your Commands to run when you want!'),
   (4, 'wait 60');
 
 INSERT INTO AppState (propName, propValue)
-VALUES 
+VALUES
   ('serverIsAccessible', '0'),
   ('currentCommandIndex', '0');
 

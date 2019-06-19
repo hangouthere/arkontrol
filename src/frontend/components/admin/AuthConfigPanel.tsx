@@ -105,10 +105,10 @@ class AuthConfigPanel extends React.PureComponent<IProps, IState> {
 
   _onChangeForm = (event: React.ChangeEvent<HTMLFormElement>) => {
     this.props.changeConfigPart({ propName: event.target.name, propValue: event.target.value });
-  }
+  };
 
   _onChangeNumericInput = (propName: string) => (val: number) =>
-    this.props.changeConfigPart({ propName, propValue: val })
+    this.props.changeConfigPart({ propName, propValue: val });
 
   render() {
     return (
@@ -121,8 +121,6 @@ class AuthConfigPanel extends React.PureComponent<IProps, IState> {
 
           <div className="flex-display space-elements-horizontal">
             {this._createFormGroup('password', 'RCON Password', 'password', 'flex-grow')}
-            {this._createFormGroup('maxConnectionAttempts', 'Max Conn', 'number', 'smallNumberInput')}
-            {this._createFormGroup('maxPacketTimeouts', 'Max TTF', 'number', 'smallNumberInput')}
           </div>
 
           {this._createFormGroup('discordAdminName', 'Discord Admin Name')}
