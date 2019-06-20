@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import BaseService from './base';
 import { ShowToaster } from './toaster';
 
 export const EVENTS = {
@@ -7,7 +7,7 @@ export const EVENTS = {
   MESSAGE_RECIEVED: 'socket::MESSAGE_RECIEVED'
 };
 
-class SocketService extends EventEmitter {
+class SocketService extends BaseService {
   private _ws!: WebSocket;
   private _hasBeenWarned = false;
 
@@ -28,12 +28,19 @@ class SocketService extends EventEmitter {
       this._ws.removeEventListener('close', this._socketDisconnected);
     }
 
+    // Cheap retry
     if (!websocketUri) {
       return setTimeout(this._connect, 1000);
     }
 
     try {
-      this._ws = new WebSocket(`ws://${websocketUri}`);
+      let finalUri = `ws://${websocketUri}`;
+
+      if (BaseService.token) {
+        finalUri += `?jwt=${BaseService.token}`;
+      }
+
+      this._ws = new WebSocket(finalUri);
       this._ws.addEventListener('open', this._socketConnected);
       this._ws.addEventListener('message', this._socketMessageRecieved);
       this._ws.addEventListener('close', this._socketDisconnected);
@@ -42,30 +49,30 @@ class SocketService extends EventEmitter {
     }
 
     return undefined;
-  }
+  };
 
   _socketConnected = (_event: Event) => {
     this._hasBeenWarned = false;
 
-    this.emit(EVENTS.CONNECTED);
+    BaseService.sharedBus.emit(EVENTS.CONNECTED);
 
     ShowToaster({
       message: 'Connected to Bot!',
       intent: 'success'
     });
-  }
+  };
 
   _socketMessageRecieved = (event: MessageEvent) => {
     try {
       const messageData = JSON.parse(event.data);
-      this.emit(EVENTS.MESSAGE_RECIEVED, messageData);
+      BaseService.sharedBus.emit(EVENTS.MESSAGE_RECIEVED, messageData);
     } catch (err) {
       console.log(`WS Unknown Message Recieved: ${event.data}`);
     }
-  }
+  };
 
   _socketDisconnected = (_event: CloseEvent) => {
-    this.emit(EVENTS.DISCONNECTED);
+    BaseService.sharedBus.emit(EVENTS.DISCONNECTED);
 
     if (false === this._hasBeenWarned) {
       this._hasBeenWarned = true;
@@ -76,7 +83,7 @@ class SocketService extends EventEmitter {
     }
 
     this._connect();
-  }
+  };
 
   async sendArkCommand(msg: string) {
     await this._ws.send(`rconCommand::${msg}`);

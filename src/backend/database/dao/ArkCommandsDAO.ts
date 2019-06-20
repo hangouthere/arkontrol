@@ -1,5 +1,5 @@
-import BaseDAO from './base';
 import { IArkCommandEntry } from '../models/ArkCommands';
+import BaseDAO from './base';
 
 class ArkCommandsDAO extends BaseDAO {
   async getCommands() {

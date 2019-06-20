@@ -2,8 +2,8 @@ import { Context } from 'koa';
 import compose from 'koa-compose';
 import jwt from 'koa-jwt';
 import { IMiddleware } from 'koa-router';
-import { IUser } from '../../../database/models/User';
 import { hasAnyRole, hasRole } from '../../../../commonUtil';
+import { IUser } from '../../../database/models/User';
 
 export const JWT_SECRET = process.env.SECRET || 'secret';
 

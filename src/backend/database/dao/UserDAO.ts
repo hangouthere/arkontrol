@@ -118,7 +118,7 @@ class UserDAO extends BaseDAO {
     const isPassDiff = oldPassword !== newPassword && newPassword !== savedUser.password;
 
     if (false === isPassDiff) {
-      throw new Error('New Password is the same as an old password');
+      throw new Error('New Password is the same as the old password');
     }
 
     return isPassDiff;

@@ -1,8 +1,8 @@
 import { EventEmitter } from 'events';
 import { PromiseDelayCancellable } from '../../commonUtil';
 import { IArkCommandEntry } from '../database/models/ArkCommands';
-import RCONClient from './RCONClient';
 import { EventMessages } from '../util/MessagingBus';
+import RCONClient from './RCONClient';
 
 type CommandList = Array<IArkCommandEntry>;
 

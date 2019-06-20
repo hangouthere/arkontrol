@@ -36,14 +36,8 @@ class AuthService extends BaseService {
       .json(j => j.token);
 
     BaseService.token = token;
-    localStorage.setItem('_token', token);
 
-    return this.currentUser;
-  }
-
-  logout() {
-    BaseService.token = undefined;
-    localStorage.removeItem('_token');
+    return BaseService.currentUser;
   }
 }
 

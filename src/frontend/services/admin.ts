@@ -56,7 +56,6 @@ class AdminService extends BaseService {
 
     if (true === isLoggedInUser) {
       BaseService.token = token;
-      localStorage.setItem('_token', token);
     }
 
     return jwtDecode(token);

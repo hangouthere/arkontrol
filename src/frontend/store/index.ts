@@ -1,9 +1,12 @@
-import { applyMiddleware, compose, createStore, Store } from 'redux';
+import { EVENTS as TokenEvents } from './../services/base';
+import { applyMiddleware, compose, createStore, Dispatch, Store } from 'redux';
 import reduxPromise from 'redux-promise-middleware';
 import reduxThunk from 'redux-thunk';
-import SocketService, { EVENTS } from '../services/socket';
-import RootReducerCreator from './reducers';
+import BaseService from '../services/base';
+import SocketService, { EVENTS as SocketEvents } from '../services/socket';
+import { AuthActions } from './actions/auth';
 import { RemoteStatusActions } from './actions/remoteStatus';
+import RootReducerCreator from './reducers';
 
 const composeEnhancers =
   typeof window === 'object' && (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__
@@ -12,33 +15,75 @@ const composeEnhancers =
 
 const rootReducer = new RootReducerCreator().rootReducer;
 
+// Check Auth every 5 minutes to auto log out when expired
+class AuthStoreFacade {
+  static AUTH_VALIDATE_FREQUENCY = 10 * 60 * 1000;
+
+  constructor(private dispatch: Dispatch) {
+    setInterval(this.checkToken, AuthStoreFacade.AUTH_VALIDATE_FREQUENCY);
+    BaseService.sharedBus.on(BaseService.EVENT_UNAUTH, this.forceLogout);
+  }
+
+  forceLogout = () => {
+    this.dispatch(AuthActions.logoutRequest());
+  };
+
+  checkToken = () => {
+    try {
+      if (false === BaseService.checkValidAuth()) {
+        this.forceLogout();
+      }
+    } catch (error) {
+      this.forceLogout();
+    }
+  };
+}
+
+// Listen for Socket connectivity and messaging
+class SocketStoreFacade {
+  constructor(private dispatch: Dispatch) {
+    BaseService.sharedBus.on(SocketEvents.CONNECTED, this._socketConnected);
+    BaseService.sharedBus.on(SocketEvents.DISCONNECTED, this._socketDisconnected);
+    BaseService.sharedBus.on(SocketEvents.MESSAGE_RECIEVED, this._socketMessaged);
+    BaseService.sharedBus.on(TokenEvents.TOKEN_SET, this._onTokenChanged);
+    BaseService.sharedBus.on(TokenEvents.TOKEN_CLEARED, this._onTokenChanged);
+  }
+
+  _socketConnected = () => {
+    this.dispatch(RemoteStatusActions.setBotStatus(true));
+
+    // Kick off getting status
+    setTimeout(() => {
+      this.dispatch(RemoteStatusActions.getServerStatus());
+    }, 1000);
+  };
+
+  _socketDisconnected = () => {
+    this.dispatch(RemoteStatusActions.setBotStatus(false));
+    this.dispatch(RemoteStatusActions.setServerStatus(false));
+  };
+
+  _socketMessaged = (messageData: any) => {
+    this.dispatch(messageData);
+  };
+
+  _onTokenChanged = () => {
+    SocketService.socket.close();
+  };
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+////
+//////////////////////////////////////////////////////////////////////////////////
+
 class ReduxStore {
   store: Store;
 
   constructor() {
     this.store = createStore(rootReducer, composeEnhancers(applyMiddleware(reduxThunk, reduxPromise)));
 
-    SocketService.on(EVENTS.CONNECTED, this._socketConnected);
-    SocketService.on(EVENTS.DISCONNECTED, this._socketDisconnected);
-    SocketService.on(EVENTS.MESSAGE_RECIEVED, this._socketMessaged);
-  }
-
-  _socketConnected = () => {
-    this.store.dispatch(RemoteStatusActions.setBotStatus(true));
-
-    // Kick off getting status
-    setTimeout(() => {
-      this.store.dispatch(RemoteStatusActions.getServerStatus());
-    }, 1000);
-  }
-
-  _socketDisconnected = () => {
-    this.store.dispatch(RemoteStatusActions.setBotStatus(false));
-    this.store.dispatch(RemoteStatusActions.setServerStatus(false));
-  }
-
-  _socketMessaged = (messageData: any) => {
-    this.store.dispatch(messageData);
+    const _ssf = new SocketStoreFacade(this.store.dispatch);
+    const _asf = new AuthStoreFacade(this.store.dispatch);
   }
 }
 

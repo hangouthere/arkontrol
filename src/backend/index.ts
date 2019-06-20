@@ -6,8 +6,8 @@ import RCONManager from './rcon/RCONManager';
 import KoaServer from './servers/webserver';
 import WebSocketServer from './servers/WebSocketServer';
 import SocketMessageProxy from './SocketMessageProxy';
-import MessagingBus from './util/MessagingBus';
 import LoggerConfig from './util/LoggerConfig';
+import MessagingBus from './util/MessagingBus';
 
 (global as any).fetch = fetch;
 

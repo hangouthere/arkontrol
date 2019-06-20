@@ -1,6 +1,5 @@
 import WebSocket from 'ws';
-import UserDAO from './database/dao/UserDAO';
-import { IAuthRequest, IUser } from './database/models/User';
+import { IUser } from './database/models/User';
 import DiscordWebhook from './DiscordWebhook';
 import RCONCommandShutdown from './rcon/RCONCommandShutdown';
 import RCONManager from './rcon/RCONManager';
@@ -13,7 +12,6 @@ const Logger = {
   commands: LoggerConfig.instance.getLogger('commands')
 };
 
-const ID_AUTH_COMMAND = 'authCommand::';
 const ID_RCON_COMMAND = 'rconCommand::';
 const ID_SYS_COMMAND = 'sysCommand::';
 
@@ -37,13 +35,17 @@ export default class SocketMessageProxy {
   };
 
   _updateSocketClients(isConnected: boolean) {
-    if (0 < this._options.socketServer.instance.clients.size) {
-      Logger.server.info(
-        `[SysProxy] Alerting Socket Clients of Status Change: ${this._options.rconMgr.state.client.statusLabel}`
-      );
+    const { clients } = this._options.socketServer.instance;
+
+    if (0 === clients.size) {
+      return;
     }
 
-    this._options.socketServer.instance.clients.forEach(client => {
+    Logger.server.info(
+      `[SysProxy] Alerting Socket Clients of Status Change: ${this._options.rconMgr.state.client.statusLabel}`
+    );
+
+    clients.forEach(client => {
       client.send(
         JSON.stringify({
           type: EventMessages.RCON.ConnectionChange,
@@ -74,15 +76,10 @@ export default class SocketMessageProxy {
     const message = data as string;
     const user = (socket as any).user as IUser;
 
-    if (0 === message.indexOf(ID_AUTH_COMMAND)) {
-      return this._manageAuth(message.replace(ID_AUTH_COMMAND, ''), socket);
+    if (!user) {
+      socket.send('authResponse::unauthorized');
+      return Logger.server.error('Unauthorized Socket Connection');
     }
-
-    // TODO: Add auth checks
-    // if (!user) {
-    //   socket.send('authResponse::unauthorized');
-    //   return Promise.reject();
-    // }
 
     if (0 === message.indexOf(ID_RCON_COMMAND)) {
       return this._proxyRCONCommand(message.replace(ID_RCON_COMMAND, ''));
@@ -96,22 +93,6 @@ export default class SocketMessageProxy {
 
     return Promise.resolve();
   };
-
-  async _manageAuth(authInfo: string, socket: WebSocket) {
-    const authSplit = authInfo.split(',');
-    const authObj: IAuthRequest = {
-      userName: authSplit[0],
-      password: authSplit[1]
-    };
-
-    try {
-      const userDao = new UserDAO();
-      const validatedUser = userDao.validateUser(authObj);
-      (socket as any).user = validatedUser;
-    } catch (err) {
-      socket.send('authResponse::error', err.message.toString());
-    }
-  }
 
   async _proxyRCONCommand(command: string) {
     Logger.commands.info(`[MsgProxy] RCON Exec: ${command}`);

@@ -1,3 +1,4 @@
+import BaseService from '../../services/base';
 import AuthService, { IAuthRequest, IUser } from './../../services/auth';
 import { IActionCreator } from './index';
 
@@ -24,6 +25,6 @@ export const AuthActions: IActionCreatorTree = {
   }),
   logoutRequest: () => ({
     type: AuthActionTypes.LOGOUT,
-    payload: AuthService.logout()
+    payload: BaseService.clearToken()
   })
 };

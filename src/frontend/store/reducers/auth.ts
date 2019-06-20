@@ -1,5 +1,6 @@
 import typeToReducer from 'type-to-reducer';
-import AuthService, { IUser } from '../../services/auth';
+import { IUser } from '../../services/auth';
+import BaseService from '../../services/base';
 import { AuthActionTypes } from '../actions/auth';
 import { UsersActionTypes } from '../actions/usersCommands';
 
@@ -13,7 +14,7 @@ export interface IAuthState {
 const INITIAL_STATE: IAuthState = {
   redirectAfterAuth: '/',
   loading: false,
-  user: AuthService.currentUser,
+  user: BaseService.currentUser,
   error: undefined
 };
 
