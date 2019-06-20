@@ -1,5 +1,5 @@
 import BaseService from '../../services/base';
-import AuthService, { IAuthRequest, IUser } from './../../services/auth';
+import AuthService, { IAuthRequest, IUser } from '../../services/auth';
 import { IActionCreator } from './index';
 
 export interface IActionCreatorTree {

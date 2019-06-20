@@ -1,9 +1,9 @@
-import { EVENTS as TokenEvents } from './../services/base';
 import { applyMiddleware, compose, createStore, Dispatch, Store } from 'redux';
 import reduxPromise from 'redux-promise-middleware';
 import reduxThunk from 'redux-thunk';
 import BaseService from '../services/base';
 import SocketService, { EVENTS as SocketEvents } from '../services/socket';
+import { EVENTS as BaseEvents } from '../services/base';
 import { AuthActions } from './actions/auth';
 import { RemoteStatusActions } from './actions/remoteStatus';
 import RootReducerCreator from './reducers';
@@ -21,7 +21,7 @@ class AuthStoreFacade {
 
   constructor(private dispatch: Dispatch) {
     setInterval(this.checkToken, AuthStoreFacade.AUTH_VALIDATE_FREQUENCY);
-    BaseService.sharedBus.on(BaseService.EVENT_UNAUTH, this.forceLogout);
+    BaseService.sharedBus.on(BaseEvents.UNAUTHORIZED, this.forceLogout);
   }
 
   forceLogout = () => {
@@ -45,8 +45,8 @@ class SocketStoreFacade {
     BaseService.sharedBus.on(SocketEvents.CONNECTED, this._socketConnected);
     BaseService.sharedBus.on(SocketEvents.DISCONNECTED, this._socketDisconnected);
     BaseService.sharedBus.on(SocketEvents.MESSAGE_RECIEVED, this._socketMessaged);
-    BaseService.sharedBus.on(TokenEvents.TOKEN_SET, this._onTokenChanged);
-    BaseService.sharedBus.on(TokenEvents.TOKEN_CLEARED, this._onTokenChanged);
+    BaseService.sharedBus.on(BaseEvents.TOKEN_SET, this._onTokenChanged);
+    BaseService.sharedBus.on(BaseEvents.TOKEN_CLEARED, this._onTokenChanged);
   }
 
   _socketConnected = () => {

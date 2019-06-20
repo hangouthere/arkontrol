@@ -1,4 +1,5 @@
 import LoggerConfig from '../util/LoggerConfig';
+import { EventMessages } from './../util/MessagingBus';
 import RCONCommandList from './RCONCommandList';
 
 const Logger = LoggerConfig.instance.getLogger('commands');
@@ -8,12 +9,17 @@ let COUNTDOWN_IDX = 0;
 const _countdowns = Array(5)
   .fill(' ')
   .map(() => {
+    const curId = COUNTDOWN_IDX++;
     return [
       {
         order: 0,
         command:
           'broadcast Server will be <RichColor Color="1, 0, 0, 1">shutting down</> in ' +
-          `<RichColor Color="1, 1, 0, 1">${5 - COUNTDOWN_IDX++} minutes</>, please get somewhere safe!`
+          `<RichColor Color="1, 1, 0, 1">${5 - curId} minutes</>, please get somewhere safe!`
+      },
+      {
+        order: 0,
+        command: `ServerChat Server will be shutting down in ${5 - curId} minutes, please get somewhere safe!`
       },
       {
         order: 0,
@@ -57,6 +63,11 @@ const CMDS_SHUTDOWN = [
 export default class RCONCommandShutdown extends RCONCommandList {
   async init() {
     Logger.info('[RCONShutdown] Shutting down Ark...');
+
+    // Only run Command List once for Shutdown, then force a stop (default is to loop)
+    this.once(EventMessages.RCON.CommandsEnd, () => {
+      this.stop();
+    });
 
     this.commandList = CMDS_SHUTDOWN;
   }

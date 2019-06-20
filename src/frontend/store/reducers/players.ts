@@ -1,6 +1,6 @@
 import typeToReducer from 'type-to-reducer';
 import { IPlayer } from '../../services/players';
-import { PlayersActionTypes } from './../actions/players';
+import { PlayersActionTypes } from '../actions/players';
 
 export interface IPlayersState {
   loading: boolean;

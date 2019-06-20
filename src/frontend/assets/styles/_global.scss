@@ -143,6 +143,18 @@ body {
       text-align: right;
     }
   }
+
+  #About {
+    cursor: help;
+
+    .label {
+      transition: all 1s;
+    }
+
+    &:hover .label {
+      color: yellow;
+    }
+  }
 }
 
 .error-panel {

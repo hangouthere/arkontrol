@@ -1,6 +1,7 @@
 import koaCors from '@koa/cors';
 import http from 'http';
 import koa from 'koa';
+import koaHistoryFallback from 'ts-koa-connect-history-api-fallback';
 import koaBodyparser from 'koa-bodyparser';
 import koaStatic from 'koa-static';
 import * as path from 'path';
@@ -39,10 +40,10 @@ export default class KoaServer {
     this._instance = new koa();
     this._httpServer = http.createServer(this._instance.callback());
     this._instance.use(koaCors());
-    this._instance.use(koaStatic(options.publicPath));
     this._instance.use(koaBodyparser());
-
     routes.bindRouter(this._instance);
+    this._instance.use(koaStatic(options.publicPath));
+    this._instance.use(koaHistoryFallback());
 
     this._httpServer.listen(options.port);
 

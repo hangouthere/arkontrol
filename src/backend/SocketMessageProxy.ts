@@ -82,28 +82,28 @@ export default class SocketMessageProxy {
     }
 
     if (0 === message.indexOf(ID_RCON_COMMAND)) {
-      return this._proxyRCONCommand(message.replace(ID_RCON_COMMAND, ''));
+      return this._proxyRCONCommand(user, message.replace(ID_RCON_COMMAND, ''));
     }
 
     if (0 === message.indexOf(ID_SYS_COMMAND)) {
-      return this._proxySysCommand(message.replace(ID_SYS_COMMAND, ''));
+      return this._proxySysCommand(user, message.replace(ID_SYS_COMMAND, ''));
     }
 
-    Logger.commands.warn(`[MsgProxy] Unsupported Message Recieved: "${message}"`);
+    Logger.commands.warn(`[MsgProxy] (${user.userName}) Unsupported Message Recieved: "${message}"`);
 
     return Promise.resolve();
   };
 
-  async _proxyRCONCommand(command: string) {
-    Logger.commands.info(`[MsgProxy] RCON Exec: ${command}`);
+  async _proxyRCONCommand(user: IUser, command: string) {
+    Logger.commands.info(`[MsgProxy] (${user.userName}) RCON Exec: ${command}`);
 
     await this._options.rconMgr.state.client.execCommand(command, {
       skipLogging: true
     });
   }
 
-  async _proxySysCommand(command: string) {
-    Logger.commands.info(`[MsgProxy] Sys Exec: ${command}`);
+  async _proxySysCommand(user: IUser, command: string) {
+    Logger.commands.info(`[MsgProxy] (${user.userName}) Sys Exec: ${command}`);
 
     switch (command) {
       case 'reconnect':
@@ -114,9 +114,7 @@ export default class SocketMessageProxy {
 
         const cmdList = new RCONCommandShutdown(this._options.rconMgr.state.client);
         cmdList.init();
-        cmdList.once(EventMessages.RCON.CommandsEnd, () => {
-          cmdList.stop();
-        });
+
         break;
     }
   }

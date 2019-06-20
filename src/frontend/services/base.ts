@@ -4,8 +4,9 @@ import { IUser } from './auth';
 import { EventEmitter } from 'events';
 
 export const EVENTS = {
-  TOKEN_SET: 'TOKEN_SET',
-  TOKEN_CLEARED: 'TOKEN_CLEARED'
+  TOKEN_SET: 'base::TOKEN_SET',
+  TOKEN_CLEARED: 'base::TOKEN_CLEARED',
+  UNAUTHORIZED: 'base::UNAUTHORIZED'
 };
 
 type Token = string | undefined;
@@ -13,7 +14,6 @@ type Token = string | undefined;
 let _token: Token;
 
 class BaseService {
-  static EVENT_UNAUTH = 'EVENT_UNAUTH';
   static sharedBus = new EventEmitter();
 
   static get currentUser(): IUser | undefined {
@@ -55,7 +55,7 @@ class BaseService {
     }
 
     api = api.catcher(401, err => {
-      BaseService.sharedBus.emit(BaseService.EVENT_UNAUTH);
+      BaseService.sharedBus.emit(EVENTS.UNAUTHORIZED);
       return Promise.reject(err);
     });
 

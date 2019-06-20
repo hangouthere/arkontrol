@@ -1,10 +1,13 @@
 import { Icon, Intent } from '@blueprintjs/core';
 import React from 'react';
 import { IRemoteStatusState } from '../../store/reducers/remoteStatus';
+import AboutPanel from './AboutPanel';
 
 const Footer: React.FC<IRemoteStatusState> = props => (
   <footer id="StatusFooter" className="flex-display">
-    <div className="about flex-grow">Made by nfgCodex</div>
+    <AboutPanel className="flex-grow">
+      <div className="label">Made by nfgCodex</div>
+    </AboutPanel>
 
     <div className="bot">
       Bot Status:&nbsp;
