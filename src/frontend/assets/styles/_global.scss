@@ -33,6 +33,14 @@ body {
   background-size: cover;
 
   padding: 20px;
+
+  @include for-tablet-down {
+    padding: 20px 40px;
+  }
+
+  @include for-phone-only {
+    padding: 0;
+  }
 }
 
 .flex {
@@ -92,16 +100,52 @@ body {
   display: flex;
   flex: 1;
 
+  @include for-phone-only {
+    min-width: 100%;
+  }
+
+  #NavBar {
+    .heading {
+      font-family: 'Ark';
+      font-size: 20px;
+    }
+
+    .user-greeting {
+      max-width: 140px;
+    }
+
+    @include for-phone-only {
+      .user-greeting {
+        display: none;
+      }
+
+      #AdminMenu {
+        margin-top: 3px;
+      }
+    }
+
+    .menuArea {
+      width: 70%;
+
+      .bp3-breadcrumbs {
+        width: 100%;
+      }
+
+      @media (max-width: 630px) {
+        width: 40%;
+
+        .bp3-breadcrumbs {
+          width: 20px;
+        }
+      }
+    }
+  }
+
   #Layout {
     display: flex;
     flex-direction: column;
     flex: 1;
     border: 2px solid rgba(0, 238, 255, 0.3);
-
-    .navbar-heading {
-      font-family: 'Ark';
-      font-size: 20px;
-    }
   }
 
   #Content {
@@ -141,6 +185,12 @@ body {
       color: white;
       width: 120px;
       text-align: right;
+    }
+
+    @include for-phone-only {
+      .label {
+        font-size: 10px;
+      }
     }
   }
 

@@ -9,7 +9,7 @@ interface INavButtonProps {
   type?: 'button' | 'submit';
 }
 
-type NavButtonType = INavButtonProps & IButtonProps & RouteComponentProps;
+export type NavButtonType = INavButtonProps & IButtonProps & RouteComponentProps;
 
 const NavButtonDef: React.FC<NavButtonType> = props => {
   const { staticContext, to, exact, ...restProps } = props;

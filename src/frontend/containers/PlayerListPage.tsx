@@ -1,4 +1,4 @@
-import { Button, Spinner } from '@blueprintjs/core';
+import { Button, Spinner, ResizeSensor, IResizeEntry } from '@blueprintjs/core';
 import React from 'react';
 import { connect } from 'react-redux';
 import { Dispatch } from 'redux';
@@ -9,8 +9,10 @@ import { PlayersActions } from '../store/actions/players';
 import { IRootState } from '../store/reducers';
 import { IPlayersState } from '../store/reducers/players';
 import PlayerMessages from './admin/PlayerMessenger';
+import PlayerListMobile from '../components/players/PlayerListMobile';
 
-const REFRESH_INTERVAL = 60 * 1000;
+const DESKTOP_MINIMUM = 769;
+const REFRESH_INTERVAL = 2 * 60 * 1000;
 
 interface IProps {
   listData: IPlayersState;
@@ -20,8 +22,27 @@ interface IProps {
   banPlayer: typeof PlayersActions.banPlayer;
 }
 
-class PlayerListContainer extends React.PureComponent<IProps> {
+interface IState {
+  isDesktop: boolean;
+}
+
+class PlayerListContainer extends React.PureComponent<IProps, IState> {
+  state: IState = {
+    isDesktop: true
+  };
+
   private _intervalId!: NodeJS.Timeout;
+
+  get hasPlayers() {
+    return this.props.listData.players && 0 !== this.props.listData.players.length;
+  }
+
+  get adminActions() {
+    return {
+      kickPlayer: this.props.kickPlayer,
+      banPlayer: this.props.banPlayer
+    };
+  }
 
   componentDidMount() {
     this._intervalId = setInterval(this._getPlayers, REFRESH_INTERVAL);
@@ -32,44 +53,74 @@ class PlayerListContainer extends React.PureComponent<IProps> {
     clearInterval(this._intervalId);
   }
 
+  _onResize = (entries: IResizeEntry[]) => {
+    const tooSmall = entries.some(entry => entry.contentRect.width < DESKTOP_MINIMUM);
+
+    this.setState({
+      isDesktop: !tooSmall
+    });
+  };
+
   _getPlayers = async () => {
     await this.props.loadPlayers();
+  };
+
+  _getNoPlayersDisplay() {
+    return <NoPlayersDetected key="npd" refreshPlayers={this._getPlayers} />;
+  }
+
+  _getPlayerListDisplay() {
+    let playerList;
+
+    if (false === this.props.isAuthenticated) {
+      playerList = <PlayerList key="pl" playerState={this.props.listData} />;
+    } else {
+      playerList = <AdminPlayerList key="pl" playerState={this.props.listData} adminActions={this.adminActions} />;
+    }
+
+    return playerList;
+  }
+
+  _getPlayerListMobileDisplay() {
+    const adminActions = this.props.isAuthenticated ? this.adminActions : undefined;
+
+    return <PlayerListMobile key="pl" playerState={this.props.listData} adminActions={adminActions} />;
+  }
+
+  _getPlayerMessagesDisplay() {
+    return this.props.isAuthenticated ? <PlayerMessages key="pm" /> : undefined;
+  }
+
+  _getDisplay() {
+    let outDisplay: React.ReactNode = <Spinner size={75} />;
+
+    if (false === this.props.listData.loading) {
+      if (false === this.hasPlayers) {
+        outDisplay = [this._getNoPlayersDisplay()];
+      } else {
+        const { isDesktop } = this.state;
+        const listDisplay = isDesktop ? this._getPlayerListDisplay() : this._getPlayerListMobileDisplay();
+
+        outDisplay = [listDisplay, this._getPlayerMessagesDisplay()];
+      }
+    }
+
+    return outDisplay;
   }
 
   render() {
-    const adminActions = {
-      kickPlayer: this.props.kickPlayer,
-      banPlayer: this.props.banPlayer
-    };
-
-    const hasPlayers = this.props.listData.players && 0 !== this.props.listData.players.length;
-    const adminPlayerList = <AdminPlayerList key="pl" playerState={this.props.listData} adminActions={adminActions} />;
-    const standardPlayerList = <PlayerList key="pl" playerState={this.props.listData} />;
-    const noPlayersDisplay = !hasPlayers ? (
-      <NoPlayersDetected key="npd" refreshPlayers={this._getPlayers} />
-    ) : (
-      undefined
-    );
-    const ChosenPlayerList = hasPlayers
-      ? false === this.props.isAuthenticated
-        ? standardPlayerList
-        : adminPlayerList
-      : undefined;
-    const ChosenPlayerMessages = this.props.isAuthenticated ? <PlayerMessages key="pm" /> : undefined;
-
-    const PlayerListOutput =
-      false === this.props.listData.loading ? [noPlayersDisplay, ChosenPlayerList] : <Spinner size={75} />;
+    const Display = this._getDisplay();
 
     return (
-      <div id="PlayerListPage">
-        <h1>
-          Player List&nbsp;
-          <Button icon="refresh" minimal={true} onClick={this._getPlayers} disabled={this.props.listData.loading} />
-        </h1>
-
-        {PlayerListOutput}
-        {ChosenPlayerMessages}
-      </div>
+      <ResizeSensor onResize={this._onResize}>
+        <div id="PlayerListPage">
+          <h1>
+            Player List&nbsp;
+            <Button icon="refresh" minimal={true} onClick={this._getPlayers} disabled={this.props.listData.loading} />
+          </h1>
+          {Display}
+        </div>
+      </ResizeSensor>
     );
   }
 }

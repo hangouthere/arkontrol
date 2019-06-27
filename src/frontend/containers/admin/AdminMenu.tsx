@@ -1,4 +1,4 @@
-import { Menu, MenuDivider, MenuItem, Popover, Tooltip } from '@blueprintjs/core';
+import { Menu, MenuDivider, MenuItem, Popover, Tooltip, Text } from '@blueprintjs/core';
 import React from 'react';
 import { connect } from 'react-redux';
 import { RouteComponentProps, withRouter } from 'react-router';
@@ -43,7 +43,7 @@ class AdminMenu extends React.PureComponent<IProps, IState> {
         false === isOpen ? this.props.resetUser : undefined
       );
     };
-  }
+  };
 
   saveUserProfile = async (user: IUser) => {
     try {
@@ -54,11 +54,11 @@ class AdminMenu extends React.PureComponent<IProps, IState> {
     } catch (err) {
       //
     }
-  }
+  };
 
   performLogout = () => {
     this.props.history.push('/logout');
-  }
+  };
 
   render() {
     const user = this.props.authState.user!;
@@ -68,7 +68,9 @@ class AdminMenu extends React.PureComponent<IProps, IState> {
         <Popover className="AdminMenu" position="top-right">
           <Tooltip>
             <div className="flex-display flex-align space-elements-horizontal">
-              <h4 className="user-greeting">Hello, {user.displayName || user.userName}</h4>
+              <Text ellipsize={true} className="user-greeting">
+                Hello, {user.displayName || user.userName}
+              </Text>
               <Gravatar user={user} />
             </div>
             User Menu

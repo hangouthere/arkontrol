@@ -1,11 +1,12 @@
 import { Alignment, Navbar, Tooltip } from '@blueprintjs/core';
 import React from 'react';
 import { connect } from 'react-redux';
+import { hasRole } from '../../../commonUtil';
+import OverflowListing from '../../components/common/OverflowListing';
 import { IRootState } from '../../store/reducers';
 import { IAuthState } from '../../store/reducers/auth';
-import { NavButton } from './NavButton';
 import AdminMenu from '../admin/AdminMenu';
-import { hasRole } from '../../../commonUtil';
+import { NavButton, NavButtonType } from './NavButton';
 
 const LoginButton: React.FC<IAuthState> = props => (
   <Tooltip>
@@ -20,32 +21,36 @@ const LoginButton: React.FC<IAuthState> = props => (
   </Tooltip>
 );
 
+type NavMenuType = Partial<NavButtonType>;
+
+const MakeNavButton = (props: any) => {
+  const { ...restProps } = props as NavMenuType;
+  return <NavButton exact={true} className="bp3-minimal" {...restProps as NavButtonType} />;
+};
+
 const Navigation: React.FC<IAuthState> = props => {
   const LoginStatusDisplay = !props.user ? LoginButton : AdminMenu;
 
-  const adminButtons = !props.user ? null : (
-    <React.Fragment>
-      <NavButton icon="crown" text="Admin Panel" to="/admin/adminPanel" exact={true} className="bp3-minimal" />
-    </React.Fragment>
-  );
+  const adminButtons: Array<NavMenuType> = !props.user
+    ? []
+    : [{ icon: 'crown', text: 'Admin Panel', to: '/admin/adminPanel' }];
 
-  const superButtons =
-    !props.user || false === hasRole('superadmin', props.user!.roles) ? null : (
-      <React.Fragment>
-        <NavButton icon="document" text="Logs" to="/admin/logs" exact={true} className="bp3-minimal" />
-        <NavButton icon="badge" text="Server Config" to="/admin/serverConfig" exact={true} className="bp3-minimal" />
-      </React.Fragment>
-    );
+  const superButtons: Array<NavMenuType> =
+    !props.user || false === hasRole('superadmin', props.user!.roles)
+      ? []
+      : [
+          { icon: 'document', text: 'Logs', to: '/admin/logs' },
+          { icon: 'badge', text: 'Server Config', to: '/admin/serverConfig' }
+        ];
+
+  const NavItems: Array<NavMenuType> = [{ icon: 'people', text: 'Players', to: '/' }, ...adminButtons, ...superButtons];
 
   return (
-    <Navbar className="Navbar">
-      <Navbar.Group>
-        <Navbar.Heading className="navbar-heading">ArKontrol</Navbar.Heading>
+    <Navbar id="NavBar">
+      <Navbar.Group className="menuArea">
+        <Navbar.Heading className="heading">ArKontrol</Navbar.Heading>
         <Navbar.Divider />
-        <NavButton icon="people" text="Players" to="/" exact={true} className="bp3-minimal" />
-
-        {adminButtons}
-        {superButtons}
+        <OverflowListing items={NavItems} itemRenderer={MakeNavButton} collapseFrom="end" />
       </Navbar.Group>
 
       <Navbar.Group align={Alignment.RIGHT}>

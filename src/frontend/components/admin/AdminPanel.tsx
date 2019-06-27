@@ -42,7 +42,7 @@ const AdminPanel: React.FC<IProps> = props => (
       </div>
 
       <div className="flex-display flex-column space-elements-vertical">
-        <h3>Time of Day</h3>
+        <h3>Time</h3>
         <div className="flex-display flex-column space-elements-vertical">
           <Button text="Dawn" onClick={props.commands.admin.bind(null, 'SetTimeOfDay 03:00')} />
           <Button text="Noon" onClick={props.commands.admin.bind(null, 'SetTimeOfDay 12:00')} />

@@ -4,8 +4,7 @@ import Gravatar from '../../containers/admin/Gravatar';
 import { IUser } from '../../services/auth';
 import { ShowToaster } from '../../services/toaster';
 import { IUsersState } from '../../store/reducers/usersCommands';
-import TagSelector, { ITagSelectItem } from '../common/TagSelector';
-import { hasRole } from '../../../commonUtil';
+import MultiSelectorDropdown, { ITagSelectItem } from '../common/MultiSelectDropdown';
 
 interface IProps {
   initialUser: IUser;
@@ -122,7 +121,11 @@ class ProfileEditor extends React.Component<IProps, IState> {
       view = this.state.user!.roles.map(r => <Tag key={r}>{r}</Tag>);
     } else {
       view = (
-        <TagSelector items={RoleTagSelectItems} selectedItems={this.state.userRoles} onChange={this._onChangeRoles} />
+        <MultiSelectorDropdown
+          items={RoleTagSelectItems}
+          selectedItems={this.state.userRoles}
+          onChange={this._onChangeRoles}
+        />
       );
     }
 

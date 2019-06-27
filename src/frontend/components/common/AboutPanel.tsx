@@ -1,4 +1,4 @@
-import { Classes, Drawer, Position } from '@blueprintjs/core';
+import { Classes, Drawer } from '@blueprintjs/core';
 import React from 'react';
 
 interface IProps {
@@ -31,6 +31,7 @@ class AboutPanel extends React.PureComponent<IProps, IState> {
           isOpen={this.state.isOpen}
           onClose={this.handleClose}
           position="right"
+          size="75%"
         >
           <div className={Classes.DRAWER_BODY}>
             <div className={Classes.DIALOG_BODY}>

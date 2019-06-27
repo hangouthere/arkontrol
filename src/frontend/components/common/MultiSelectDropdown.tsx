@@ -1,6 +1,7 @@
+import { Button, MenuItem } from '@blueprintjs/core';
+import { IMultiSelectProps, ItemPredicate, ItemRenderer, MultiSelect } from '@blueprintjs/select';
 import React from 'react';
-import { MultiSelect, ItemRenderer, IMultiSelectProps, ItemPredicate } from '@blueprintjs/select';
-import { MenuItem, Button } from '@blueprintjs/core';
+import { AreItemsEqual, HilightText, ITagItemPredicate } from './DropDownUtil';
 
 export interface ITagSelectItem {
   key: string;
@@ -11,6 +12,7 @@ export interface ITagSelectItem {
 
 interface IProps extends Partial<IMultiSelectProps<ITagSelectItem>> {
   items: Array<ITagSelectItem>;
+  selectedItem?: ITagSelectItem;
   selectedItems?: Array<ITagSelectItem>;
   onChange?: (selItems: Array<ITagSelectItem>) => void;
 }
@@ -24,78 +26,37 @@ function escapeRegExpChars(text: string) {
   return text.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, '\\$1');
 }
 
-const TagSelectorComponent = MultiSelect.ofType<ITagSelectItem>();
+class MultiSelectorDropdown extends React.PureComponent<IProps, IState> {
+  static defaultProps: IProps = {
+    items: []
+  };
 
-class TagSelector extends React.PureComponent<IProps, IState> {
   state: IState = {
     selectedItems: [],
     items: []
   };
 
+  private _SelectorComponent = MultiSelect.ofType<ITagSelectItem>();
+
   private _getSelectedItemIndex = (item: ITagSelectItem) => this.state.selectedItems.findIndex(i => i.key === item.key);
   private _isItemSelected = (item: ITagSelectItem) => this._getSelectedItemIndex(item) !== -1;
-  private _areItemsEqual = (a: ITagSelectItem, b: ITagSelectItem) => a.key === b.key;
 
-  componentDidMount() {
-    if (this.state.items !== this.props.items) {
+  _updateItemsIfNecessary(inProps: IProps) {
+    if (inProps.items !== this.props.items) {
       this.setState({ items: this.props.items });
     }
 
-    if (this.state.selectedItems !== this.props.selectedItems) {
+    if (inProps.selectedItems !== this.props.selectedItems) {
       this.setState({ selectedItems: this.props.selectedItems! });
     }
+  }
+
+  componentDidMount() {
+    this._updateItemsIfNecessary(this.state as IProps);
   }
 
   componentDidUpdate(prevProps: IProps) {
-    if (prevProps.items !== this.props.items) {
-      this.setState({ items: this.props.items });
-    }
-
-    if (prevProps.selectedItems !== this.props.selectedItems) {
-      this.setState({ selectedItems: this.props.selectedItems! });
-    }
-  }
-
-  _highlightText(text: string, query: string) {
-    let lastIndex = 0;
-    const words = query
-      .split(/\s+/)
-      .filter(word => word.length > 0)
-      .map(escapeRegExpChars);
-
-    if (words.length === 0) {
-      return [text];
-    }
-
-    const regexp = new RegExp(words.join('|'), 'gi');
-    const tokens: React.ReactNode[] = [];
-
-    while (true) {
-      const match = regexp.exec(text);
-
-      if (!match) {
-        break;
-      }
-
-      const length = match[0].length;
-      const before = text.slice(lastIndex, regexp.lastIndex - length);
-
-      if (before.length > 0) {
-        tokens.push(before);
-      }
-
-      lastIndex = regexp.lastIndex;
-
-      tokens.push(<strong key={lastIndex}>{match[0]}</strong>);
-    }
-
-    const rest = text.slice(lastIndex);
-
-    if (rest.length > 0) {
-      tokens.push(rest);
-    }
-
-    return tokens;
+    this._updateItemsIfNecessary(prevProps);
   }
 
   renderTag = (item: ITagSelectItem) => item.tag;
@@ -110,13 +71,13 @@ class TagSelector extends React.PureComponent<IProps, IState> {
         active={modifiers.active}
         icon={this._isItemSelected(item) ? 'tick' : 'blank'}
         key={item.key}
-        text={this._highlightText(item.text, query)}
+        text={HilightText(item.text, query)}
         label={item.label}
         onClick={handleClick}
         shouldDismissPopover={false}
       />
     );
-  }
+  };
 
   _toggleItem(item: ITagSelectItem, toggleVal: boolean = false) {
     let selectedItems = [...this.state.selectedItems];
@@ -140,17 +101,17 @@ class TagSelector extends React.PureComponent<IProps, IState> {
 
   onItemSelect = (item: ITagSelectItem) => {
     this._toggleItem(item, !this._isItemSelected(item));
-  }
+  };
 
   _onTagRemove = (key: string) => {
     this._toggleItem({ key } as any, false);
-  }
+  };
 
   _onClearTags = () => {
     this.setState({
       selectedItems: []
     });
-  }
+  };
 
   _itemPredicate: ItemPredicate<ITagSelectItem> = (query, item, _index, exactMatch) => {
     const normalizedTitle = item.text.toLowerCase();
@@ -161,7 +122,7 @@ class TagSelector extends React.PureComponent<IProps, IState> {
     } else {
       return `${normalizedTitle} ${item.key} ${item.label} ${item.tag}`.toLowerCase().indexOf(normalizedQuery) >= 0;
     }
-  }
+  };
 
   render() {
     const clearButton =
@@ -171,20 +132,22 @@ class TagSelector extends React.PureComponent<IProps, IState> {
         undefined
       );
 
+    const SelectorComponent = this._SelectorComponent;
+
     return (
-      <TagSelectorComponent
-        className="TagSelector"
+      <SelectorComponent
+        className="selector"
         tagRenderer={this.props.tagRenderer || this.renderTag}
         itemRenderer={this.props.itemRenderer || this.renderItem}
         onItemSelect={this.props.onItemSelect || this.onItemSelect}
         items={this.props.items}
         selectedItems={this.state.selectedItems}
-        itemsEqual={this._areItemsEqual}
         tagInputProps={{ onRemove: this._onTagRemove, rightElement: clearButton }}
-        itemPredicate={this._itemPredicate}
+        itemsEqual={AreItemsEqual}
+        itemPredicate={ITagItemPredicate}
       />
     );
   }
 }
 
-export default TagSelector;
+export default MultiSelectorDropdown;
