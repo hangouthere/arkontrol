@@ -52,14 +52,16 @@ class SocketService extends BaseService {
   };
 
   _socketConnected = (_event: Event) => {
-    this._hasBeenWarned = false;
-
     BaseService.sharedBus.emit(EVENTS.CONNECTED);
 
-    ShowToaster({
-      message: 'Connected to Bot!',
-      intent: 'success'
-    });
+    if (false === this._hasBeenWarned) {
+      ShowToaster({
+        message: 'Connected to Bot!',
+        intent: 'success'
+      });
+    }
+
+    this._hasBeenWarned = false;
   };
 
   _socketMessageRecieved = (event: MessageEvent) => {
@@ -71,8 +73,11 @@ class SocketService extends BaseService {
     }
   };
 
-  _socketDisconnected = (_event: CloseEvent) => {
-    BaseService.sharedBus.emit(EVENTS.DISCONNECTED);
+  _socketDisconnected = (event: CloseEvent) => {
+    BaseService.sharedBus.emit(EVENTS.DISCONNECTED, event);
+
+    const tokenChange = 'tokenChange' === event.reason;
+    this._hasBeenWarned = tokenChange ? true : this._hasBeenWarned;
 
     if (false === this._hasBeenWarned) {
       this._hasBeenWarned = true;

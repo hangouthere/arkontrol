@@ -55,8 +55,14 @@ export default class RCONClient {
   }
 
   private _evaluateError = async (err: any, options: IRCONExecOptions = {}, cmd?: string) => {
-    // TODO: See if this is the right thing to do....
-    // It might be skipping errors completley somehow?
+    if (err) {
+      if (err.message) {
+        Logger.server.error('SOME ERROR EVALUATING: ' + err.message.toString());
+      } else {
+        Logger.server.error('SOME ERROR EVALUATING: ' + JSON.stringify(err));
+      }
+    }
+
     if (true === this._hasErrorState) {
       return true;
     }
@@ -130,10 +136,15 @@ export default class RCONClient {
     Logger.debug.error('[RCON] !!!! Unknown error: ', err);
 
     return false;
-  }
+  };
 
   private async _testConnect() {
     try {
+      Logger.server.info(
+        `[RCON]: Attempting to connect to ${this._options.config.connectData.host}:${
+          this._options.config.connectData.port
+        }`
+      );
       const instance = new Rcon(this._options.config.connectData);
 
       // Send a bogus command to test connection

@@ -25,7 +25,6 @@ const TSCompile = {
 
 /**
  * Pre-Process JS files to enhance SourceMaps
- * TODO: See if this even works...
  */
 const SourceMaps = {
   enforce: 'pre',
