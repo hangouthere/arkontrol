@@ -1,6 +1,6 @@
+import md5 from 'blueimp-md5';
 import React from 'react';
 import { IUser } from '../../services/auth';
-import md5 from 'blueimp-md5';
 
 export type GravatarDefault = '404' | 'blank' | 'identicon' | 'monsterid' | 'mp' | 'retro' | 'robohash' | 'wavatar';
 

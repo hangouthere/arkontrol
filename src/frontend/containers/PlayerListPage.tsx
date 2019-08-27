@@ -1,15 +1,15 @@
-import { Button, Spinner, ResizeSensor, IResizeEntry } from '@blueprintjs/core';
+import { Button, IResizeEntry, NonIdealState, ResizeSensor, Spinner } from '@blueprintjs/core';
 import React from 'react';
 import { connect } from 'react-redux';
 import { Dispatch } from 'redux';
 import AdminPlayerList from '../components/players/AdminPlayerList';
 import NoPlayersDetected from '../components/players/NoPlayersDetected';
 import PlayerList from '../components/players/PlayerList';
+import PlayerListMobile from '../components/players/PlayerListMobile';
 import { PlayersActions } from '../store/actions/players';
 import { IRootState } from '../store/reducers';
 import { IPlayersState } from '../store/reducers/players';
 import PlayerMessages from './admin/PlayerMessenger';
-import PlayerListMobile from '../components/players/PlayerListMobile';
 
 const DESKTOP_MINIMUM = 769;
 const REFRESH_INTERVAL = 2 * 60 * 1000;
@@ -91,7 +91,7 @@ class PlayerListContainer extends React.PureComponent<IProps, IState> {
     return this.props.isAuthenticated ? <PlayerMessages key="pm" /> : undefined;
   }
 
-  _getDisplay() {
+  _getPlayerList() {
     let outDisplay: React.ReactNode = <Spinner size={75} />;
 
     if (false === this.props.listData.loading) {
@@ -108,8 +108,8 @@ class PlayerListContainer extends React.PureComponent<IProps, IState> {
     return outDisplay;
   }
 
-  render() {
-    const Display = this._getDisplay();
+  _getPlayerPageDisplay() {
+    const PlayerList = this._getPlayerList();
 
     return (
       <ResizeSensor onResize={this._onResize}>
@@ -118,10 +118,30 @@ class PlayerListContainer extends React.PureComponent<IProps, IState> {
             Player List&nbsp;
             <Button icon="refresh" minimal={true} onClick={this._getPlayers} disabled={this.props.listData.loading} />
           </h1>
-          {Display}
+          {PlayerList}
         </div>
       </ResizeSensor>
     );
+  }
+
+  _getErrorDisplay() {
+    const desc = (
+      <div className="flex-display flex-column noContact">
+        This can be for a few reasons:
+        <ul>
+          <li>This is a fresh install, and unconfigured.</li>
+          <li>The ArKontrol Server simply cannot be reached.</li>
+          <li>The ArKontrol Server has crashed (oh no!)</li>
+        </ul>
+        Please contact your server Administrator to fix this issue.
+      </div>
+    );
+
+    return <NonIdealState icon="offline" title="Cannot Contact ArKontrol Server" description={desc} />;
+  }
+
+  render() {
+    return this.props.listData.error ? this._getErrorDisplay() : this._getPlayerPageDisplay();
   }
 }
 

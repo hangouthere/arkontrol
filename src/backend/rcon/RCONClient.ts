@@ -3,6 +3,9 @@ import LoggerConfig from '../util/LoggerConfig';
 import { EventMessages } from '../util/MessagingBus';
 import { IRCONHelperInitOptions } from './RCONManager';
 
+const RECONNECT_TIMEOUT = 5 * 60 * 1000; // 5 mins
+const RECONNECT_EXPIRE_TIMEOUT = 2 * 60 * 60 * 1000; //2 hrs
+
 const Logger = {
   debug: LoggerConfig.instance.getLogger(),
   commands: LoggerConfig.instance.getLogger('commands'),
@@ -15,9 +18,15 @@ export interface IRCONExecOptions {
   skipRetry?: boolean;
 }
 
+interface IRCONReconnectState {
+  timeout: NodeJS.Timeout | undefined;
+  startTime: number;
+}
+
 export default class RCONClient {
   private _serverIsAccessible!: boolean;
   private _hasErrorState: boolean = false;
+  private _reconnectState?: IRCONReconnectState | undefined;
 
   get serverIsAccessible() {
     return this._serverIsAccessible;
@@ -25,6 +34,14 @@ export default class RCONClient {
 
   get statusLabel() {
     return this._serverIsAccessible ? 'Online' : 'Offline';
+  }
+
+  private get _connectExpired() {
+    if (!this._reconnectState) {
+      return false;
+    }
+
+    return new Date().getTime() - this._reconnectState.startTime >= RECONNECT_EXPIRE_TIMEOUT;
   }
 
   constructor(private _options: IRCONHelperInitOptions) {}
@@ -37,10 +54,31 @@ export default class RCONClient {
       return undefined;
     }
 
+    const connectionWasLost = this._serverIsAccessible === true && false === isUp;
     this._serverIsAccessible = isUp;
     this._options.config.saveServerStatus(isUp);
 
     this._options.messagingBus.emit(EventMessages.RCON.ConnectionChange, isUp);
+
+    if (true === connectionWasLost) {
+      if (false === isUp && !this._reconnectState) {
+        Logger.server.info(
+          `[RCON] Setting up ${RECONNECT_TIMEOUT /
+            60 /
+            1000} minute reconnect heartbeat. If the IP/domain has changed, update in the Auth config.`
+        );
+        const timeout = setInterval(this._rediscoverServer, RECONNECT_TIMEOUT);
+
+        this._reconnectState = {
+          timeout,
+          startTime: new Date().getTime()
+        };
+      } else if (true === isUp && this._reconnectState) {
+        Logger.server.info(`[RCON] Server connection restored!`);
+        clearInterval(this._reconnectState.timeout as NodeJS.Timeout);
+        this._reconnectState = undefined;
+      }
+    }
 
     return undefined;
   }
@@ -54,15 +92,19 @@ export default class RCONClient {
     await this._testConnect();
   }
 
-  private _evaluateError = async (err: any, options: IRCONExecOptions = {}, cmd?: string) => {
-    if (err) {
-      if (err.message) {
-        Logger.server.error('SOME ERROR EVALUATING: ' + err.message.toString());
-      } else {
-        Logger.server.error('SOME ERROR EVALUATING: ' + JSON.stringify(err));
-      }
+  _rediscoverServer = () => {
+    if (true === this._connectExpired) {
+      Logger.server.error('[RCON] Too much time has past, giving up on rediscovering server.');
+      clearInterval(this._reconnectState!.timeout as NodeJS.Timeout);
+      this._reconnectState = undefined;
+      return undefined;
     }
 
+    Logger.server.info('[RCON] Attempting to rediscover server...');
+    return this.init();
+  };
+
+  private _evaluateError = async (err: any, options: IRCONExecOptions = {}, cmd?: string) => {
     if (true === this._hasErrorState) {
       return true;
     }
@@ -149,6 +191,8 @@ export default class RCONClient {
 
       // Send a bogus command to test connection
       await instance.session(async c => await c.send('ping'));
+
+      Logger.server.info('[RCON]: Connected!');
 
       this._markServerStatus(true);
     } catch (err) {
