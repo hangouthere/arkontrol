@@ -1,15 +1,15 @@
-import { Menu, MenuDivider, MenuItem, Popover, Tooltip, Text } from '@blueprintjs/core';
+import { Menu, MenuDivider, MenuItem, Popover, Text, Tooltip } from '@blueprintjs/core';
 import React from 'react';
 import { connect } from 'react-redux';
 import { RouteComponentProps, withRouter } from 'react-router';
 import { Dispatch } from 'redux';
 import ProfileEditor from '../../components/admin/ProfileEditor';
 import { IUser } from '../../services/auth';
+import { ISaveUserPayload, UsersActions } from '../../store/actions/usersCommands';
 import { IRootState } from '../../store/reducers';
 import { IAuthState } from '../../store/reducers/auth';
-import Gravatar from './Gravatar';
-import { UsersActions, ISaveUserPayload } from '../../store/actions/usersCommands';
 import { IUsersState } from '../../store/reducers/usersCommands';
+import Gravatar from './Gravatar';
 
 interface IProps extends RouteComponentProps {
   authState: IAuthState;

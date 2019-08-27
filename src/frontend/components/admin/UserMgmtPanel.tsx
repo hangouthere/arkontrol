@@ -1,4 +1,4 @@
-import { Button, Popover, Classes } from '@blueprintjs/core';
+import { Button, Classes, Popover } from '@blueprintjs/core';
 import { Cell, Column, Table } from '@blueprintjs/table';
 import React from 'react';
 import { IUser, NormalizeUserName } from '../../services/auth';

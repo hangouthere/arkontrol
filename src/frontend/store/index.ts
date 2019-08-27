@@ -68,7 +68,7 @@ class SocketStoreFacade {
   };
 
   _onTokenChanged = () => {
-    SocketService.socket.close();
+    SocketService.socket.close(4000, 'tokenChange');
   };
 }
 

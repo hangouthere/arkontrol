@@ -3,7 +3,7 @@ import React from 'react';
 import { IPlayer } from '../../services/players';
 import { IPlayersState } from '../../store/reducers/players';
 import { ITagSelectItem } from '../common/MultiSelectDropdown';
-import SelectorDropdown from '../common/SelectDropdown';
+import SelectDropdown from '../common/SelectDropdown';
 import ConfirmAction from './ConfirmPlayerAction';
 import NoPlayerSelected from './NoPlayerSelected';
 
@@ -44,14 +44,28 @@ class PlayerListMobile extends React.PureComponent<IProps, IState> {
   };
 
   _getUserSelectDisplay(players?: Array<IPlayer>) {
-    let playersSelectItems: Array<ITagSelectItem> = (players || []).map(p => ({
-      key: p.steamId,
-      tag: p.userName,
-      text: p.userName,
-      label: p.isOnline ? 'Online' : 'Offline'
-    }));
+    let onlineCount = 0;
+    let playersSelectItems: Array<ITagSelectItem> = [];
 
-    return <SelectorDropdown items={playersSelectItems} onChange={this._onChangePlayer} />;
+    (players || []).forEach(p => {
+      playersSelectItems.push({
+        key: p.steamId,
+        tag: p.userName,
+        text: p.userName,
+        label: p.isOnline ? 'Online' : 'Offline'
+      });
+
+      if (true === p.isOnline) {
+        onlineCount++;
+      }
+    });
+
+    return (
+      <div className="flex-display space-elements-horizontal flex-align">
+        <SelectDropdown items={playersSelectItems} onChange={this._onChangePlayer} />
+        <span className="onlineCount">Online: {onlineCount}</span>
+      </div>
+    );
   }
 
   _getUserDisplay(player?: IPlayer) {
