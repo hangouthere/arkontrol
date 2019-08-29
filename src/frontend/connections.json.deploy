@@ -1,0 +1,4 @@
+{
+  "websocket": "localhost:8080",
+  "arkontrol": "//localhost:8080"
+}
