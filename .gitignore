@@ -4,6 +4,3 @@ _dist
 _build
 _deploy
 __BACKUP
-
-# Secret Secure Data
-**/rconConfig/config.json

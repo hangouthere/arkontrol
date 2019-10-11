@@ -1,4 +1,6 @@
 const path = require('path');
+const TerserPlugin = require('terser-webpack-plugin');
+const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const {
   WDSPort,
   Outputs: { DistDir, Frontend: OutputInfo }
@@ -38,8 +40,15 @@ const DevServer = {
   }
 };
 
+const Optimization = {
+  optimization: {
+    minimizer: [new TerserPlugin(), new OptimizeCSSAssetsPlugin()]
+  }
+};
+
 module.exports = {
   DevServer,
+  Optimization,
   Resolver,
   WatchOptions
 };

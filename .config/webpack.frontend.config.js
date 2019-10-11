@@ -11,7 +11,7 @@ const {
     CommonConfig,
     DevConfigMod: { frontend: DevConfigMod }
   },
-  Webpack: { DevServer }
+  Webpack: { DevServer, Optimization }
 } = require('./definitions');
 
 Util.checkDLLMissing();
@@ -30,7 +30,8 @@ const config = merge.smart(
   // Add Dev Server config
   DevServer,
   // Add Dev/Prod config modifiers
-  !isProd ? DevConfigMod : {}
+  !isProd ? DevConfigMod : {},
+  isProd ? Optimization : {}
 );
 
 Util.checkConfigOnly(config);
