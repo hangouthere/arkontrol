@@ -24,8 +24,7 @@
     "build:release": "npm run clean && npm run build:prod && pkg --out-dir ./_build ./_dist/backend/index.js",
     "build:deploy": "ts-node ./.scripts/deploy.ts",
     "clean": "rimraf ./_build ./_dist ./_deploy ./node_modules/.cache/babel-loader",
-    "lint": "tslint .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "tslint ."
   },
   "engines": {
     "node": ">=7"
