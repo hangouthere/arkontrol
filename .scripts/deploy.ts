@@ -52,7 +52,13 @@ class Deployer {
   async _copyDependencies() {
     console.log('Copying Dependencies...');
 
-    const sqlite3Src = (await glob('./node_modules/sqlite3/lib/binding/**/*sqlite3.node'))[0];
+    const sqlite3Src = (await glob('./node_modules/sqlite/**/*sqlite3.node'))[0];
+
+    if (!sqlite3Src) {
+      console.log('Unable to find a built sqlite3.node! Cannot continue...');
+      process.exit(-1);
+    }
+
     const sqlite3Dest = './_build/bin/' + path.basename(sqlite3Src);
     console.log(`  - Copying: ${sqlite3Src} -> ${sqlite3Dest}`);
     await fs.copy(sqlite3Src, sqlite3Dest);
