@@ -6,7 +6,7 @@ import * as rimrafLib from 'rimraf';
 import * as archiver from 'archiver';
 import * as globLib from 'glob';
 
-const VERSION = '1.0.0';
+const VERSION = '1.0.1';
 
 const shortcut: any = require('windows-shortcuts');
 

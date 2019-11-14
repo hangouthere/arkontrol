@@ -177,6 +177,9 @@ class AdminRoutes extends BaseRoute {
         if (true === isValidChange) {
           await userDao.saveUserPassword(inUser);
         }
+      } else if (false === isSelf && isSuper) {
+        // If super admin, just set it for the other user
+        await userDao.saveUserPassword(inUser);
       } else if (false === isSelf && !isSuper) {
         return ctx.throw(403, 'You cannot change passwords for others without the proper authorization.');
       }
